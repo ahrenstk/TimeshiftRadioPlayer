@@ -51,7 +51,12 @@ You only need a modern web browser that supports:
 
 ### Installation & Local Run
 
-- cop`radio.html` or `bob.html
+- copy `index.html` and change the setting
+- copy all in a folder for possibility to install as Progressive Web App (PWA)
+
+## Privacy Notice
+
+By running this application, the data (e.g. chunks and station presets) are saved locally on your device. No personal data is transmitted to external servers, except for connecting directly to audio streams. This application is intended for private use only, as there is no active privacy notice or user consent mechanism prior to storing data in the browser.
 
 
 ## Configuration
@@ -67,6 +72,8 @@ this.livestations = [
 ];
 ```
 
+The first two entries correspond to the four entries t1, t2, t3, t4 listed below. The software automatically switches between two stations at :03, :27, :33, and :57 past the hour. If this logic is not required, it must be manually disabled or removed."
+
 
 ```javascript
 this.stations = [
@@ -75,6 +82,8 @@ this.stations = [
 
 ];
 ```
+List of recordable streams. Only MP3 can be used. Please also set the correct bitrate.
+
 
 ```javascript
 this.dynamicUrls = [
@@ -85,6 +94,8 @@ this.dynamicUrls = [
 
 ];
 ```
+
+Dynamic urls for switching at :03, :27, :33, :57 every hour.
 
 
 > **Note on Audio Streams**: Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
