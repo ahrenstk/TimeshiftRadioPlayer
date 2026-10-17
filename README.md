@@ -101,7 +101,7 @@ this.dynamicUrls = [
 Dynamic urls for switching at :03, :27, :33, :57 every hour.
 
 
-> **Note on Audio Streams**: Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
+**Note on Audio Streams**: Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
 
 ---
 
