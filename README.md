@@ -10,6 +10,8 @@ Unlike standard web radio players that only stream live audio via HTML5 `<audio>
 
 Whether you need to step away from your desk, missed a song title or news segment, or want to skip ahead through buffered content, this player gives you full control over live audio.
 
+I developed software specifically for train journeys: with about 15 minutes of lead time, it builds up enough buffer to effortlessly bridge even longer dead zones on one- to two-hour routes.
+
 ---
 
 ## Key Features
@@ -20,6 +22,7 @@ Whether you need to step away from your desk, missed a song title or news segmen
 - **Smart Reconnection & Overlap Detection**: Uses trailing frame signatures to detect and eliminate duplicate audio segments when reconnecting.
 - **Web Audio API & Worker Decoupling**: Background Web Worker isolates buffer copies while the `AudioContext` handles gapless audio scheduling.
 - **Live & Timeshift Modes**: Toggle instantly between direct low-latency live streaming and timeshift buffer playback.
+- **Auto-Delete:**: On startup, recordings are truncated to two hours.
 - **Interactive UI**:
   - Split buffer timeline displaying both past (rewindable) and future (buffered) capacity.
   - Perceptual non-linear volume slider curve for natural volume control.
