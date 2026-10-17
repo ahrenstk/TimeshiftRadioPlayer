@@ -19,11 +19,10 @@ I developed software specifically for train journeys: with about 15 minutes of l
 
 ## Key Features
 
-- **True Timeshift Playback**: Pause live radio, rewind and forward in steps (1 chunk or 10 chunks).
+- **True Timeshift Playback**: Pause live radio, rewind and forward in steps (1 chunk (monstly one minute) or 10 chunks (mostly 10 minutes)).
 - **Client-Side Chunk Persistence**: Audio chunks are buffered and stored locally using **IndexedDB**, surviving network drops and stream reconnects.
 - **Low-Level MPEG Frame Parsing**: Custom stream parser checks MPEG sync words, frame headers, bitrates, and sample rates to guarantee clean, uncorrupted chunk boundaries.
 - **Smart Reconnection & Overlap Detection**: Uses trailing frame signatures to detect and eliminate duplicate audio segments when reconnecting.
-- **Web Audio API & Worker Decoupling**: Background Web Worker isolates buffer copies while the `AudioContext` handles gapless audio scheduling.
 - **Live & Timeshift Modes**: Toggle instantly between direct low-latency live streaming and timeshift buffer playback.
 - **Auto-Delete:**: On startup, recordings are truncated to two hours.
 - **Interactive UI**:
@@ -37,15 +36,6 @@ I developed software specifically for train journeys: with about 15 minutes of l
   - **PWA Ready**: Includes manifest configuration and Service Worker registration.
 
 ---
-
-## Architecture & Code Structure
-
-The project is structured in clean, modular object-oriented JavaScript classes:
-
-
----
-
-## Getting Started
 
 ### Prerequisites
 
@@ -105,20 +95,6 @@ Dynamic urls for switching at :03, :27, :33, :57 every hour.
 
 
 > **Note on Audio Streams**: Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
-
----
-
-## Controls & Usage
-
-| Control | Action |
-| :--- | :--- |
-| **LIVE Button** | Starts direct live stream playback. |
-| **Play / Pause Button** | Starts or pauses Timeshift audio playback. |
-| **«« / »» (Split Buttons)** | Jumps back / forward by 1 chunk (~60 seconds). |
-| **««« / »»» (Outer Buttons)** | Jumps back / forward by 10 chunks (~10 minutes). |
-| **Toggle Slider** | Toggles network recording (Freeze / Record mode). |
-| **Top Slider** | Adjusts playback volume with perceptual curve correction. |
-| **Bottom Slider** | Sets sleep timer (1 to 60 minutes). |
 
 ---
 
