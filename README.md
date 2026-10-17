@@ -59,15 +59,33 @@ You only need a modern web browser that supports:
 You can customize the available radio streams directly in the `App` class constructor inside the script:
 
 ```javascript
-this.stations = [
-    { 
-        name: "Station Name", 
-        url: "https://your-stream-url.mp3", 
-        bitrate: 128000 
-    },
-    // Add your favorite stations here
+this.livestations = [
+            { name: "BOB! & Best of Rock", url: "dynamic" }, 
+            { name: "BOB! & Best of Rock AAC", url: "dynamic_aac" },
+            { name: "RADIO BOB!", url: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de" },
+            { name: "RADIO BOB! AAC", url: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de" },
 ];
 ```
+
+
+```javascript
+this.stations = [
+            { name: "RADIO BOB!", url: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de", bitrate: 128000 },
+            { name: "RADIO BOB! Best of Rock", url: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de", bitrate: 128000 },
+
+];
+```
+
+```javascript
+this.dynamicUrls = [
+            t1: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de",
+            t2: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de",
+            t3: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de",
+            t4: "https://streams.radiobob.de/bob-bestofrock/aac-64/mediaplayer"
+
+];
+```
+
 
 > **Note on Audio Streams**: Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
 
@@ -89,4 +107,6 @@ this.stations = [
 
 
 ## License
+
+This project is licensed under the **MIT License**. You can find the licensing details in the `LICENSE` file.
 
