@@ -5,7 +5,7 @@ A modern, responsive one-file-website (`index.html`) and Progressive Web App (PW
 **Notice**: Please wait a few minutes after starting the initial recording before you start the timeshift playback.
 
 
-**Demo**: **[https://ahrenstk.github.io/TimeshiftRadioPlayer](https://ahrenstk.github.io/TimeshiftRadioPlayer)**
+**Demo**: **[https://ahrens.tk/radio](https://ahrenstk/radio)**
 
 
 
