@@ -1,6 +1,6 @@
 # TimeshiftRadioPlayer
 
-TimeshiftRadioPlayer is a modern single-file website (index.html) and Progressive Web App (PWA) enabling time-shifted listening (like a DVR) for live internet radio streams. Built with vanilla JavaScript, the Web Audio API, and IndexedDB, it records live audio chunks locally in real-time, allowing you to pause, rewind, fast-forward, fast-rewind and resume live broadcasts seamlessly.
+TimeshiftRadioPlayer is a modern, single-file website (index.html) and Progressive Web App (PWA) that enables time-shifted listening for live internet radio streams. Built with vanilla JavaScript, the Web Audio API, and IndexedDB, it records live audio chunks locally in real-time, allowing you to pause, rewind, fast-forward, fast-rewind and resume live broadcasts seamlessly.
 
 **Notice**: Please wait a few minutes after starting the initial recording before you start the timeshift playback.
 
