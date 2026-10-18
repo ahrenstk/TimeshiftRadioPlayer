@@ -1,22 +1,22 @@
-# timeshift-radio-player
+# TimeshiftRadioPlayer
 
 A modern, responsive one-file-website (`index.html`) and Progressive Web App (PWA) that brings DVR-style **Timeshift** capabilities to live internet radio streams. Built with vanilla JavaScript, the Web Audio API, and IndexedDB, it records live audio chunks locally in real-time, allowing you to pause, rewind, fast-forward, fast-rewind and resume live broadcasts seamlessly.
 
 **Notice**: Please wait a few minutes after starting the initial recording before you start the timeshift playback.
 
 
-**Demo**: **[https://ahrenstk.github.io/timeshift-radio-player](https://ahrenstk.github.io/timeshift-radio-player)**
+**Demo**: **[https://ahrenstk.github.io/TimeshiftRadioPlayer](https://ahrenstk.github.io/TimeshiftRadioPlayer)**
 
 
 
-![Timeshift Radio Player](https://raw.githubusercontent.com/ahrenstk/timeshift-radio-player/main/timeshift-radio-player.jpg)
+![TimeshiftRadioPlayer](https://raw.githubusercontent.com/ahrenstk/TimeshiftRadioPlayer/main/TimeshiftRadioPlayer.jpg)
 
 
 ---
 
 ## Overview
 
-Unlike standard web radio players that only stream live audio via HTML5 `<audio>` tags, **timeshift-radio-player** continuously fetches raw stream data, synchronizes MPEG frames, segments audio into chunks, and persists them into browser storage (`IndexedDB`).
+Unlike standard web radio players that only stream live audio via HTML5 `<audio>` tags, **TimeshiftRadioPlayer** continuously fetches raw stream data, synchronizes MPEG frames, segments audio into chunks, and persists them into browser storage (`IndexedDB`).
 
 Whether you need to step away from your desk, missed a song title or news segment, or want to skip ahead through buffered content, this player gives you full control over live audio.
 
