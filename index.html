@@ -51,8 +51,8 @@ SOFTWARE.
 
     --text-light: #ffffff;
     --text-muted: #a0a0ab;
-    --text-dibled: #b0b0b0; 
-    --text-select-dibled: #c5c5c5;
+    --text-disabled: #b0b0b0; 
+    --text-select-disabled: #c5c5c5;
 
     --clr-cyan: #52c5c5;
     --clr-green: #4fca75; 
@@ -64,7 +64,7 @@ SOFTWARE.
 
 
 body { 
-    font-family: ns-serif;
+    font-family: sans-serif;
     background: var(--bg-main); 
     color: var(--text-light); 
     display: flex;
@@ -73,10 +73,10 @@ body {
     justify-content: center; 
     min-height: 100dvh; 
     margin: 0; 
-    padding-top: max(1rem, env(fe-area-inset-top));
-    padding-bottom: max(1rem, env(fe-area-inset-bottom));
-    padding-left: env(fe-area-inset-left);
-    padding-right: env(fe-area-inset-right);
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
     box-sizing: border-box;
 }
 
@@ -263,18 +263,18 @@ body {
 
 
 
-input:dibled, 
-select:dibled,
-.btn:dibled {
+input:disabled, 
+select:disabled,
+.btn:disabled {
     opacity: 0.45 !important;
-    color: var(--text-dibled) !important;
-    border-color: var(--text-dibled) !important;
+    color: var(--text-disabled) !important;
+    border-color: var(--text-disabled) !important;
     cursor: not-allowed;
 }
 
-.station-select:dibled { 
+.station-select:disabled { 
     background-color: var(--bg-card);
-    color: var(--text-select-dibled) !important;
+    color: var(--text-select-disabled) !important;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>") !important;
 }
 
@@ -435,19 +435,19 @@ select:dibled,
 }
 
 
-.switch-checkbox:dibled + .switch-label {
+.switch-checkbox:disabled + .switch-label {
     opacity: 0.45 !important;
     background: var(--bg-card) !important;
-    border-color: var(--text-dibled, #b0b0b0) !important;
+    border-color: var(--text-disabled, #b0b0b0) !important;
     cursor: not-allowed;
 }
 
-.switch-checkbox:dibled + .switch-label .switch-text-left,
-.switch-checkbox:dibled + .switch-label .switch-text-right {
-    color: var(--text-dibled, #b0b0b0) !important;
+.switch-checkbox:disabled + .switch-label .switch-text-left,
+.switch-checkbox:disabled + .switch-label .switch-text-right {
+    color: var(--text-disabled, #b0b0b0) !important;
 }
 
-.switch-checkbox:dibled + .switch-label .switch-button {
+.switch-checkbox:disabled + .switch-label .switch-button {
     background-color: transparent !important;
     border-color: var(--text-disabled, #b0b0b0) !important;
 }
@@ -567,7 +567,7 @@ select:dibled,
     
 class ChunkDB {
     constructor() {
-        this.dbName = "RadioBufferDB";
+        this.dbName = "TimeshiftRadioPlayer";
         this.storeName = "chunks";
         this.settingsStoreName = "settings";
         this.db = null;
@@ -1326,133 +1326,124 @@ switchLiveStreamTo(url) {
     }
     
 
+	updateStatusDisplay() {
+	    const formatBufferDuration = (s) => {
+	        const d = Math.max(0, Math.floor(s));
+	        const h = Math.floor(d / 3600);
+	        const m = Math.floor((d % 3600) / 60);
+	        const sec = Math.floor(d % 60);
+	        return h > 0 ?
+	            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` :
+	            `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+	    };
+	
+	    const formatTime = (ts) => {
+	        const d = new Date(ts);
+	        
 
-updateStatusDisplay() {
-    const formatBufferDuration = (s) => {
-        const d = Math.max(0, Math.floor(s));
-        const h = Math.floor(d / 3600);
-        const m = Math.floor((d % 3600) / 60);
-        const sec = Math.floor(d % 60);
-        return h > 0 ?
-            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` :
-            `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-    };
+	        const userLang = navigator.language || 'en';
 
-    const formatTime = (ts) => {
-        const d = new Date(ts);
-        return `${["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][d.getDay()]} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-    };
-
-        const getPlaybackTime = () => {
-
-        if (this.state.currentPlayingChunkData) {
-            return this.state.currentPlayingChunkData.startTime;
-        }
-
-        if (this.state.playlistChunks.length > 0) {
-            return this.state.playlistChunks[0].startTime;
-        }
-
-        if (this.state.playedChunksHistory.length > 0) {
-            return this.state.playedChunksHistory[this.state.playedChunksHistory.length - 1].startTime;
-        }
-
-        return this.state.firstChunkTimestamp || Date.now();
-    };
-
-    const getNewestTime = () => {
-
-    const lastPlaylist = this.state.playlistChunks.length > 0 
-        ? this.state.playlistChunks[this.state.playlistChunks.length - 1].startTime 
-        : 0;
-
-
-    const currentPlaying = this.state.currentPlayingChunkData
-        ? this.state.currentPlayingChunkData.startTime
-        : 0;
-
-
-    const newestSaved = Math.max(lastPlaylist, currentPlaying);
-
-    if (newestSaved > 0) {
-        return newestSaved;
-    }
-
-    return Date.now();
-};
-
-
-    let totalBufferSeconds = 0;
-    const bytesPerSecond = this.state.bitrate / 8;
-
-    if (bytesPerSecond > 0 && !this.state.isStopped) {
-        totalBufferSeconds = this.state.playlistChunks.reduce((acc, c) => acc + (c.length / bytesPerSecond), 0);
-        
-        const player = this.app.player;
-        const currentChunk = this.state.currentPlayingChunkData;
-        
-                if (this.state.isPlaying && currentChunk && player.currentChunkStartTime > 0 && player.audioCtx) {
-            const elapsed = player.audioCtx.currentTime - player.currentChunkStartTime;
-            const remainingInChunk = (currentChunk.length / bytesPerSecond) - elapsed;
-            totalBufferSeconds += Math.max(0, remainingInChunk);
-        } else if (this.state.isManualPause) {
-
-            if (this.state.playlistChunks.length > 0 && player.currentChunkOffset > 0) {
-                 const firstChunkInPlaylist = this.state.playlistChunks[0];
-                 const firstChunkDuration = firstChunkInPlaylist.length / bytesPerSecond;
-                 const remainingInFirstChunk = firstChunkDuration - player.currentChunkOffset;
-                 
-
-                 totalBufferSeconds -= player.currentChunkOffset;
-            }
-        }
-        
-
-        if (!this.state.isNetworkFrozen && this.app.streamer.chunkProcessor.rawBuffer) {
-            totalBufferSeconds += this.app.streamer.chunkProcessor.rawBuffer.length / bytesPerSecond;
-        }
-    }
-
-    const bufferText = `(${formatBufferDuration(totalBufferSeconds)})`;
-    const timeRange = `${formatTime(getPlaybackTime())} ➔ ${formatTime(getNewestTime())}`;
-
-    let statusText = "";
-    let statusClass = "";
-
-    if (this.state.isLiveMode) {
-        const stationName = this.els.liveStationSelect.options[this.els.liveStationSelect.selectedIndex]?.text || "";
-        statusText = `Live - ${stationName}`;
-        statusClass = (!this.state.isStopped && !this.state.isNetworkFrozen) ? "status-buffering-active" : "status-live";
-    } 
-    else if (!this.state.isStopped) {
-        let mode = 'Rec';
-        
-
-            if (!this.state.isNetworkFrozen && !this.state.isConnected) {
-            mode = this.state.isPlaying ? 'Play' : 'Try';
-            statusClass = "status-frozen";
-        } else {
-            if (this.state.isPlaying) {
-                mode = 'Play';
-            } else if (this.state.isNetworkFrozen) {
-                mode = 'Stop';
-            }
-            statusClass = this.state.isNetworkFrozen ? "status-buffering-idle" : "status-buffering-active";
-        }
-
-        
-        statusText = `${mode} - ${timeRange} ${bufferText}`;
-    } 
-    else {
-        const rangeStr = this.state.firstChunkTimestamp ? ` - ${timeRange} ${bufferText}` : "";
-        statusText = `Stop${rangeStr}`;
-        statusClass = "status-frozen";
-    }
-    
-    this.els.statusDisplay.innerText = statusText;
-    this.els.statusDisplay.className = statusClass;
-}
-
+	        const weekdays = userLang.startsWith('de')
+	            ? ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"] // Deutsch
+	            : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]; // Englisch (2 Buchstaben)
+	
+	        return `${weekdays[d.getDay()]} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+	    };
+	
+	    const getPlaybackTime = () => {
+	        if (this.state.currentPlayingChunkData) {
+	            return this.state.currentPlayingChunkData.startTime;
+	        }
+	        if (this.state.playlistChunks.length > 0) {
+	            return this.state.playlistChunks[0].startTime;
+	        }
+	        if (this.state.playedChunksHistory.length > 0) {
+	            return this.state.playedChunksHistory[this.state.playedChunksHistory.length - 1].startTime;
+	        }
+	        return this.state.firstChunkTimestamp || Date.now();
+	    };
+	
+	    const getNewestTime = () => {
+	        const lastPlaylist = this.state.playlistChunks.length > 0 
+	            ? this.state.playlistChunks[this.state.playlistChunks.length - 1].startTime 
+	            : 0;
+	
+	        const currentPlaying = this.state.currentPlayingChunkData
+	            ? this.state.currentPlayingChunkData.startTime
+	            : 0;
+	
+	        const newestSaved = Math.max(lastPlaylist, currentPlaying);
+	
+	        if (newestSaved > 0) {
+	            return newestSaved;
+	        }
+	        return Date.now();
+	    };
+	
+	    let totalBufferSeconds = 0;
+	    const bytesPerSecond = this.state.bitrate / 8;
+	
+	    if (bytesPerSecond > 0 && !this.state.isStopped) {
+	        totalBufferSeconds = this.state.playlistChunks.reduce((acc, c) => acc + (c.length / bytesPerSecond), 0);
+	        
+	        const player = this.app.player;
+	        const currentChunk = this.state.currentPlayingChunkData;
+	        
+	        if (this.state.isPlaying && currentChunk && player.currentChunkStartTime > 0 && player.audioCtx) {
+	            const elapsed = player.audioCtx.currentTime - player.currentChunkStartTime;
+	            const remainingInChunk = (currentChunk.length / bytesPerSecond) - elapsed;
+	            totalBufferSeconds += Math.max(0, remainingInChunk);
+	        } else if (this.state.isManualPause) {
+	            if (this.state.playlistChunks.length > 0 && player.currentChunkOffset > 0) {
+	                 const firstChunkInPlaylist = this.state.playlistChunks[0];
+	                 const firstChunkDuration = firstChunkInPlaylist.length / bytesPerSecond;
+	                 totalBufferSeconds -= player.currentChunkOffset;
+	            }
+	        }
+	        
+	        if (!this.state.isNetworkFrozen && this.app.streamer.chunkProcessor.rawBuffer) {
+	            totalBufferSeconds += this.app.streamer.chunkProcessor.rawBuffer.length / bytesPerSecond;
+	        }
+	    }
+	
+	    const bufferText = `(${formatBufferDuration(totalBufferSeconds)})`;
+	    const timeRange = `${formatTime(getPlaybackTime())} ➔ ${formatTime(getNewestTime())}`;
+	
+	    let statusText = "";
+	    let statusClass = "";
+	
+	    if (this.state.isLiveMode) {
+	        const stationName = this.els.liveStationSelect.options[this.els.liveStationSelect.selectedIndex]?.text || "";
+	        statusText = `Live - ${stationName}`;
+	        statusClass = (!this.state.isStopped && !this.state.isNetworkFrozen) ? "status-buffering-active" : "status-live";
+	    } 
+	    else if (!this.state.isStopped) {
+	        let mode = 'Rec';
+	        
+	        if (!this.state.isNetworkFrozen && !this.state.isConnected) {
+	            mode = this.state.isPlaying ? 'Play' : 'Try';
+	            statusClass = "status-frozen";
+	        } else {
+	            if (this.state.isPlaying) {
+	                mode = 'Play';
+	            } else if (this.state.isNetworkFrozen) {
+	                mode = 'Stop';
+	            }
+	            statusClass = this.state.isNetworkFrozen ? "status-buffering-idle" : "status-buffering-active";
+	        }
+	        
+	        statusText = `${mode} - ${timeRange} ${bufferText}`;
+	    } 
+	    else {
+	        const rangeStr = this.state.firstChunkTimestamp ? ` - ${timeRange} ${bufferText}` : "";
+	        statusText = `Stop${rangeStr}`;
+	        statusClass = "status-frozen";
+	    }
+	    
+	    this.els.statusDisplay.innerText = statusText;
+	    this.els.statusDisplay.className = statusClass;
+	}
+	
 
 
     updateButtons() {
