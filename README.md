@@ -26,21 +26,21 @@ I developed software specifically for train journeys: with about 15 minutes of l
 
 ## Key Features
 
-- **True Timeshift Playback**: Pause live radio, rewind and forward in steps (1 chunk (monstly one minute) or 10 chunks (mostly 10 minutes)).
-- **Client-Side Chunk Persistence**: Audio chunks are buffered and stored locally using **IndexedDB**, surviving network drops and stream reconnects.
-- **Low-Level MPEG Frame Parsing**: Custom stream parser checks MPEG sync words, frame headers, bitrates, and sample rates to guarantee clean, uncorrupted chunk boundaries.
-- **Smart Reconnection & Overlap Detection**: Uses trailing frame signatures to detect and eliminate duplicate audio segments when reconnecting.
-- **Live & Timeshift Modes**: Toggle instantly between direct low-latency live streaming and timeshift buffer playback.
-- **Auto-Delete:**: On startup, recordings are truncated to two hours.
-- **Interactive UI**:
+- **True Timeshift Playback:** Pause live radio, rewind and forward in steps (1 chunk (monstly one minute) or 10 chunks (mostly 10 minutes)).
+- **Client-Side Chunk Persistence:** Audio chunks are buffered and stored locally using **IndexedDB**, surviving network drops and stream reconnects.
+- **Low-Level MPEG Frame Parsing:** Custom stream parser checks MPEG sync words, frame headers, bitrates, and sample rates to guarantee clean, uncorrupted chunk boundaries.
+- **Smart Reconnection & Overlap Detection:** Uses trailing frame signatures to detect and eliminate duplicate audio segments when reconnecting.
+- **Live & Timeshift Modes:** Toggle instantly between direct low-latency live streaming and timeshift buffer playback.
+- **Auto-Delete:** On startup, recordings are truncated to two hours.
+- **Interactive UI:**
   - Split buffer timeline displaying both past (rewindable) and future (buffered) capacity.
   - Perceptual non-linear volume slider curve for natural volume control.
   - Sleep timer with automatic stream cut-off.
   - Network Freeze / Record toggle switch with smooth touch & drag interactions.
-- **System Integration**:
-  - **Media Session API**: Lock screen controls and track status across mobile and desktop.
-  - **Screen Wake Lock**: Prevents device sleep during active sessions.
-  - **PWA Ready**: Includes manifest configuration and Service Worker registration.
+- **System Integration:**
+  - **Media Session API:** Lock screen controls and track status across mobile and desktop.
+  - **Screen Wake Lock:** Prevents device sleep during active sessions.
+  - **PWA Ready:** Includes manifest configuration and Service Worker registration.
 
 ---
 
@@ -101,7 +101,7 @@ this.dynamicUrls = [
 Dynamic urls for switching at :03, :27, :33, :57 every hour.
 
 
-**Note on Audio Streams**: Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
+**Note on Audio Streams:** Internet radio streams must allow Cross-Origin Resource Sharing (CORS) headers (`Access-Control-Allow-Origin: *`) for the browser's `fetch()` API to read and chunk raw audio data.
 
 ---
 
