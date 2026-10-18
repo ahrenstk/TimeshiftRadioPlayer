@@ -75,7 +75,7 @@ this.livestations = [
 ];
 ```
 
-The first two entries correspond to the four entries t1, t2, t3, t4 listed below. The software automatically switches between two stations at :03, :27, :33, and :57 past the hour. If this logic is not required, it must be manually disabled or removed."
+The first two entries (dynamic and dynamic_aac) correspond to the four entries t1, t2, t3, t4 listed below. The software automatically switches between two stations at :03, :27, :33, and :57 past the hour. If this logic is not required, you can delete this tow lines. You can but must not delete the software logic.
 
 
 ```javascript
