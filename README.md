@@ -59,7 +59,7 @@ You only need a modern web browser that supports:
 
 ## Privacy Notice
 
-By running this application, the data (e.g. chunks and station presets) are saved locally on your device. No personal data is transmitted to external servers, except for connecting directly to audio streams. This application is intended for private use only, as there is no active privacy notice or user consent mechanism prior to storing data in the browser.
+By running this application, the data (e.g. chunks and station presets) are saved locally on your device. No personal data is transmitted to external servers, except for connecting directly to audio streams. This application is intended for private use only, as there is no active privacy notice or user consent mechanism prior to storing data in the browser. For other use feel free to add a privacy notice for your users.
 
 
 ## Configuration
