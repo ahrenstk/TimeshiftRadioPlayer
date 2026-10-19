@@ -57,7 +57,7 @@ You only need a modern web browser that supports:
 
 ### Installation & Local Run
 
-- copy `index.html` and change the settings
+- copy `index.html` and change settings
 - for Progressive Web App (PWA) copy `index.html`, `manifest.json`, `sw.js`, `icon-192.png` and `icon-512.png` and change settings or files 
 
 ## Privacy Notice
