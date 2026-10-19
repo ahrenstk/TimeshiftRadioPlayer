@@ -23,7 +23,7 @@ Unlike standard web radio players that only stream live audio via HTML5 `<audio>
 
 Whether you need to step away from your desk, missed a song title or news segment, or want to skip ahead through buffered content, this player gives you full control over live audio.
 
-I developed the software **TimeshiftRadioPlayer** specifically for train journeys: with about 15 minutes of lead time, it builds up enough buffer to effortlessly bridge even longer dead zones on one- to two-hour routes between [https://en.wikipedia.org/wiki/Emsland](Emsland) and [https://en.wikipedia.org/wiki/M%C3%BCnster](Münster).
+I developed the software **TimeshiftRadioPlayer** specifically for train journeys: with about 15 minutes of lead time, it builds up enough buffer to effortlessly bridge even longer dead zones on one- to two-hour routes between [Emsland](https://en.wikipedia.org/wiki/Emsland) and [Münster](https://en.wikipedia.org/wiki/Emsland).
 
 
 ---
