@@ -70,35 +70,35 @@ By running this application, the data (e.g. chunks and station presets) are save
 You can customize the available radio streams directly in the `App` class constructor inside the script:
 
 ```javascript
-this.livestations = [
+this.livestations = {
             { name: "BOB! & Best of Rock", url: "dynamic" }, 
             { name: "BOB! & Best of Rock AAC", url: "dynamic_aac" },
             { name: "RADIO BOB!", url: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de" },
             { name: "RADIO BOB! AAC", url: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de" },
-];
+};
 ```
 
 The first two entries (dynamic and dynamic_aac) correspond to the four entries t1, t2, t3, t4 listed below. The software automatically switches between two stations at :03, :27, :33, and :57 past the hour. If this logic is not required, you can delete this tow lines. You can but must not delete the software logic.
 
 
 ```javascript
-this.stations = [
+this.stations = {
             { name: "RADIO BOB!", url: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de", bitrate: 128000 },
             { name: "RADIO BOB! Best of Rock", url: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de", bitrate: 128000 },
 
-];
+};
 ```
 List of recordable streams. Only MP3 can be used. Please also set the correct bitrate.
 
 
 ```javascript
-this.dynamicUrls = [
+this.dynamicUrls = {
             t1: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de",
             t2: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de",
             t3: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de",
             t4: "https://streams.radiobob.de/bob-bestofrock/aac-64/mediaplayer"
 
-];
+};
 ```
 
 Dynamic urls for switching at :03, :27, :33, :57 every hour.
