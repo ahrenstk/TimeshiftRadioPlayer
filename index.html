@@ -49,13 +49,13 @@ SOFTWARE.
     --bg-input: #282828;
     --bg-reload: #4a4a4a;
 
-    --text-light: #ffffff;
+    --text-light: #cbd5e1;
     --text-muted: #a0a0ab;
     --text-disabled: #b0b0b0; 
     --text-select-disabled: #c5c5c5;
 
     --clr-cyan: #52c5c5;
-    --clr-green: #4fca75; 
+    --clr-white: #cbd5e1;
     --clr-grey: #e0e0e0;
     --clr-grey-buffering: #4a4a4a;
 
@@ -137,8 +137,8 @@ body {
 }
 
 .station-select.live-select {
-    border-color: var(--clr-green);
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232e7d32' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+    border-color: var(--clr-white);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
 }
 
 .station-select option {
@@ -230,13 +230,13 @@ body {
 
 
 #liveBtn {
-    border: 3px solid var(--clr-green);
+    border: 3px solid var(--clr-white);
     color: var(--text-light);
     letter-spacing: 1px;
 }
 
 #liveBtn.live-active {
-    border-color: var(--clr-green);
+    border-color: var(--clr-white);
     color: var(--text-light);
 }
 
@@ -326,7 +326,7 @@ select:disabled,
 .split-buffer-wrapper .buffer-container {
     flex: 1;
     height: 10px; 
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(203, 213, 225, 0.1);
     border-radius: 4px;
     overflow: hidden;
     position: relative;
