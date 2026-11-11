@@ -8,7 +8,7 @@
 **Notice**: Please wait a few minutes after starting the initial recording before you start the timeshift playback.
 
 
-**Demo**: **[https://ahrens.tk/radio](https://ahrens.tk/radio)**
+**Demo**: **[https://ahrenstk.github.io/TimeshiftRadioPlayer)**
 
 
 
