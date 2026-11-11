@@ -35,7 +35,7 @@ I developed the software **TimeshiftRadioPlayer** specifically for train journey
 - **Low-Level MPEG Frame Parsing:** Custom stream parser checks MPEG sync words, frame headers, bitrates, and sample rates to guarantee clean, uncorrupted chunk boundaries.
 - **Smart Reconnection & Overlap Detection:** Uses trailing frame signatures to detect and eliminate duplicate audio segments when reconnecting.
 - **Live & Timeshift Modes:** Toggle instantly between direct low-latency live streaming and timeshift buffer playback.
-- **Auto-Delete:** The recording is truncated to three hours (`const KEEP_CHUNKS = 180;`).
+- **Auto-Delete:** The recording is truncated to three hours (`static MAX_CHUNKS = 180;`).
 - **Interactive UI:**
   - Split buffer timeline displaying both past (rewindable) and future (buffered) capacity.
   - Perceptual non-linear volume slider curve for natural volume control.
