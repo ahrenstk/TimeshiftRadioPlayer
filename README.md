@@ -19,7 +19,7 @@
 
 ## Overview
 
-Unlike standard web radio players that only stream live audio via HTML5 `<audio>` tags, **TimeshiftRadioPlayer** continuously fetches raw stream data, synchronizes MPEG frames, segments audio into chunks, and persists them into browser storage (`IndexedDB`).
+Unlike standard web radio players that only stream live audio via HTML5 <audio> tags, TimeshiftRadioPlayer continuously fetches raw stream data, synchronizes individual MP3 (MPEG-1/2 Layer III) frames, segments the audio into chunks, and persists them into browser storage (IndexedDB).
 
 Whether you need to step away from your desk, missed a song title or news segment, or want to skip ahead through buffered content, this player gives you full control over live audio.
 
