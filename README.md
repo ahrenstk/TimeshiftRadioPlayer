@@ -5,8 +5,6 @@
 
 **German version:** [https://github.com/ahrenstk/RADIO-BOB-TimeshiftRadioPlayer](https://github.com/ahrenstk/RADIO-BOB-TimeshiftRadioPlayer) 
 
-(different dbname, manifest-id, sw-js-CACHE_NAME and radio stations)
-
 
 **Notice**: Please wait a few minutes after starting the initial recording before you start the timeshift playback.
 
@@ -61,8 +59,8 @@ You only need a modern web browser that supports:
 
 ### Installation & Local Run
 
-- copy `index.html` and change settings
-- for Progressive Web App (PWA) copy `index.html`, `manifest.json`, `sw.js`, `icon-192.png` and `icon-512.png` and change settings or files 
+- copy `index.html` and change settings e.g. stations (index.html)
+- for Progressive Web App (PWA) copy `index.html`, `manifest.json`, `sw.js`, `icon-192.png` and `icon-512.png` and change e.g. dbname (index.html), id (manifest.json), CACHE_NAME (sw.js)
 
 ## Privacy Notice
 
