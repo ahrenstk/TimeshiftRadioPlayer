@@ -28,7 +28,7 @@ SOFTWARE.
 <html lang="en" translate="no" class="notranslate">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Radio</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0e0e0e">
@@ -48,11 +48,11 @@ SOFTWARE.
     --bg-main: #0e0e0e;
     --bg-card: var(--bg-main);
     --bg-input: #282828;
+    --bg-inactive: #444;
     --clr-light: #cbd5e1;
     --text-muted: #a0a0ab;
     --text-disabled: #b0b0b0;
     --text-select-disabled: #c5c5c5;
-
     --clr-cyan: #52c5c5;
 }
 
@@ -72,6 +72,10 @@ body {
     overflow: hidden;
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+    -webkit-tap-highlight-color: transparent;
+}
+body, .player-card {
+    touch-action: none;
 }
 
 .player-card {
@@ -129,13 +133,12 @@ body {
     color: var(--clr-light);
     border-radius: 50px;
     font-size: 1em;
-    font-weight: bold;
     outline: none;
     cursor: pointer;
     text-align: center;
     text-align-last: center;
     appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14'><text x='0' y='12' fill='%2300bcd4' font-size='14'>▾</text></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14'><text x='0' y='12' fill='%2352c5c5' font-size='14'>▾</text></svg>");
     background-repeat: no-repeat;
     background-position: right 1.2em center;
     border: 2px solid var(--clr-cyan);
@@ -146,6 +149,7 @@ body {
 
 .station-select.live-select {
     border-color: var(--clr-light);
+    background-color: var(--bg-input);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14'><text x='0' y='12' fill='%23cbd5e1' font-size='14'>▾</text></svg>");
 }
 
@@ -159,18 +163,18 @@ body {
 .timer-input {
     appearance: none;
     width: 100%;
-    height: 5px;
+    height: 8px;
     border-radius: 6px;
     outline: none;
     cursor: pointer;
 }
 
 .slider-input {
-    background: linear-gradient(to right, var(--clr-light) 0%, var(--clr-light) 50%, #444 50%, #444 100%);
+    background: linear-gradient(to right, var(--clr-light) 0%, var(--clr-light) 50%, var(--bg-inactive) 50%, var(--bg-inactive) 100%);
 }
 
 .timer-input {
-    background: linear-gradient(to right, var(--clr-light) 0%, var(--clr-light) 0%, #444 0%, #444 100%);
+    background: linear-gradient(to right, var(--clr-light) 0%, var(--clr-light) 0%, var(--bg-inactive) 0%, var(--bg-inactive) 100%);
 }
 
 .slider-input::-webkit-slider-thumb,
@@ -182,7 +186,7 @@ body {
     background: var(--clr-light);
     cursor: pointer;
     box-shadow:
-        0 0 10px rgba(255, 152, 0, 0.5),
+        0 0 10px rgba(82, 197, 197, 0.5),
         0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
@@ -195,7 +199,7 @@ body {
     background: var(--clr-light);
     cursor: pointer;
     box-shadow:
-        0 0 10px rgba(255, 152, 0, 0.5),
+        0 0 10px rgba(82, 197, 197, 0.5),
         0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
@@ -211,13 +215,18 @@ body {
     justify-content: center;
     outline: none;
     font-size: 1em;
-    font-weight: bold;
+    font-weight: normal;
     margin: 0;
     height: 2.3em;
     line-height: normal;
+    touch-action: manipulation;
+    transition: background-color 0.1s ease, transform 0.05s ease;
 }
 
-
+.btn.active-touch:not(:disabled) {
+    background-color: rgba(82, 197, 197, 0.2) !important;
+    transform: scale(0.96);
+}
 
 #liveBtn,
 #startBtn {
@@ -228,7 +237,7 @@ body {
     width: 18px;
     height: 18px;
     stroke: currentColor;
-    fill: currentColor;
+    fill: none;
     display: block;
 }
 
@@ -292,7 +301,7 @@ select:disabled,
 }
 
 #statusDisplay {
-    font-size: 1.05em;
+    font-size: 1.1em;
     color: var(--clr-cyan);
     font-weight: bold;
     min-height: 1.4em;
@@ -346,7 +355,7 @@ select:disabled,
 .split-buffer-wrapper .buffer-container {
     flex: 1;
     height: 10px;
-    background-color: rgba(203, 213, 225, 0.1);
+    background-color: var(--bg-inactive);
     border-radius: 4px;
     overflow: hidden;
     position: relative;
@@ -485,7 +494,7 @@ select:disabled,
             <div id="statusDisplay"></div>
         </div>
         <div class="buffer-row-container">
-            <svg id="bufferIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0a0ab" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+            <svg id="bufferIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
                 <path d="M5 2h14M5 22h14M19 2v4a7 7 0 0 1-7 7 7 7 0 0 1-7-7V2M5 22v-4a7 7 0 0 1 7-7 7 7 0 0 1 7 7v4"></path>
             </svg>
             <div class="split-buffer-wrapper">
@@ -559,7 +568,7 @@ select:disabled,
             </label>
         </div>
         <div class="volume-container">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0a0ab" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
             </svg>
@@ -567,7 +576,7 @@ select:disabled,
             <div style="width: 18px; height: 18px; flex-shrink: 0;" aria-hidden="true"></div>
         </div>
         <div class="timer-container">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a0a0ab" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
@@ -769,8 +778,7 @@ class App {
             { name: "SWR3", url: "https://liveradio.swr.de/sw282p3/swr3/play.mp3" }, 
             { name: "SWR4", url: "https://liveradio.swr.de/sw282p3/swr4fn/play.mp3" }, 
             { name: "WDR 3", url: "https://wdr-wdr3-live.icecast.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3" },
-            { name: "WDR 5", url: "https://wdr-wdr5-live.icecastssl.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3" },   
-            { name: "MDR Klassik", url: "https://mdr-284350-0.sslcast.mdr.de/mdr/284350/0/mp3/high/stream.mp3"}, 
+            { name: "WDR 5", url: "https://wdr-wdr5-live.icecastssl.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3" },
             { name: 'Absolut relax', url: 'https://absolut-relax.live-sm.absolutradio.de/absolut-relax' },
             { name: 'Klassik Radio', url: 'https://klassikr.streamabc.net/klr-krdnational-mp3-192-8877033' },
             { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
@@ -1117,8 +1125,9 @@ class UIManager {
         this.isLiveSwitching = false;
 
         this.icons = {
-            play: `<svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
-            pause: `<svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`,
+            play: `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
+            pause: `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`,
+
         };
     }
     
@@ -1165,111 +1174,102 @@ class UIManager {
     
     
     bindEvents() {
-	    this.els.liveBtn.addEventListener('click', () => {
-	        if (!this.state.isLiveMode) this.startLiveMode();
-	        else this.stopLiveMode();
-	    });
-	    this.els.startBtn.addEventListener('click', () => {
-	        if (this.state.isLiveMode) this.stopLiveMode();
-	        if (this.state.isDecoding) return;
-	        
-	        if (this.state.isStopped) this.app.startRadio();
-	        else if (this.state.isPlaying) this.app.player.pause();
-	        else this.app.player.play();
-	        this.update();
-	    });
-	    
-	    this.bindSwitch();
-	    this.els.rewindBtn.addEventListener('click', () => this.app.player.jumpChunks(-1));
-	    this.els.rewindBtn2.addEventListener('click', () => this.app.player.jumpChunks(-10));
-	    this.els.skipBtn.addEventListener('click', () => this.app.player.jumpChunks(1));
-	    this.els.skipBtn2.addEventListener('click', () => this.app.player.jumpChunks(10));
-	    
-	    this.els.stationSelect.addEventListener('change', (e) => this.handleStationChange(e));
-	    this.els.liveStationSelect.addEventListener('change', (e) => this.handleLiveStationChange(e));
-	    
-	    this.els.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
-	    this.els.sleepTimerSlider.addEventListener('input', (e) => this.handleSleepTimerChange(e));
-	    
-	    this.setupDraggableSlider(this.els.volumeSlider);
-	    this.setupDraggableSlider(this.els.sleepTimerSlider);
 
-	    
+        this.els.startBtn.addEventListener('click', () => {
+            if (this.state.isLiveMode) this.stopLiveMode();
+            if (this.state.isDecoding) return;
+            
+            if (this.state.isStopped) this.app.startRadio();
+            else if (this.state.isPlaying) this.app.player.pause();
+            else this.app.player.play();
+            this.update();
+        });
+
+        this.els.liveBtn.addEventListener('click', () => {
+            if (!this.state.isLiveMode) this.startLiveMode();
+            else this.stopLiveMode();
+        });
+
+        this.els.rewindBtn.addEventListener('click', () => this.app.player.jumpChunks(-1));
+        this.els.rewindBtn2.addEventListener('click', () => this.app.player.jumpChunks(-10));
+        this.els.skipBtn.addEventListener('click', () => this.app.player.jumpChunks(1));
+        this.els.skipBtn2.addEventListener('click', () => this.app.player.jumpChunks(10));
+
+
+  
+        this.bindSwitch();
+        this.els.stationSelect.addEventListener('change', (e) => this.handleStationChange(e));
+        this.els.liveStationSelect.addEventListener('change', (e) => this.handleLiveStationChange(e));
+
+
+        this.els.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
+        this.els.sleepTimerSlider.addEventListener('input', (e) => this.handleSleepTimerChange(e));
+        
+        this.setupDraggableSlider(this.els.volumeSlider);
+        this.setupDraggableSlider(this.els.sleepTimerSlider);
+
 
         window.addEventListener('online', () => {
             this.app.state.isConnected = true;
             this.app.streamer.ensureConnection();
         });
+
         window.addEventListener('offline', () => {
             this.app.state.isConnected = false;
             this.app.streamer.disconnect(false);
             this.update();
         });
-        window.addEventListener('beforeunload', (e) => { e.preventDefault(); e.returnValue = true; });
 
-	    document.addEventListener('visibilitychange', () => {
-	        if (this.state.wakeLock && document.visibilityState === 'visible') {
-	            this.app.requestWakeLock();
-	        }
-	    });
-	
-	
-	document.addEventListener('gesturestart', function (e) {
-    e.preventDefault();
-});
-	
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            e.returnValue = true;
+        });
 
-        let touchStartY = 0;
-        let touchStartX = 0;
+        document.addEventListener('visibilitychange', () => {
+            if ((this.state.isPlaying || this.state.isLiveMode) && document.visibilityState === 'visible') {
+                this.app.requestWakeLock();
+            }
+        });
 
-        window.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                touchStartY = e.touches[0].clientY;
-                touchStartX = e.touches[0].clientX;
+        document.addEventListener('gesturestart', (e) => {
+            e.preventDefault();
+        });
+
+
+        this.els.startBtn.parentElement.addEventListener('touchstart', (e) => {
+            const btn = e.target.closest('.btn');
+            if (btn && !btn.disabled) {
+                btn.classList.add('active-touch');
             }
         }, { passive: true });
 
-        window.addEventListener('touchmove', (e) => {
-            if (e.touches.length !== 1) return;
 
-            const touchY = e.touches[0].clientY;
-            const touchX = e.touches[0].clientX;
-            
-            const diffY = touchY - touchStartY;
-            const diffX = touchX - touchStartX;
-
-   
-            if (document.documentElement.scrollTop <= 0 && diffY > 0) {
-                if (e.cancelable) e.preventDefault();
-            }
-
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            if (document.documentElement.scrollTop >= maxScroll && diffY < 0) {
-                if (e.cancelable) e.preventDefault();
-            }
-
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (e.target.tagName !== 'INPUT') {
-                    if (e.cancelable) e.preventDefault();
-                }
-            }
-
-        }, { passive: false });
-
-
-	}
+        const removeTouchFeedback = () => {
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active-touch'));
+        };
+        document.addEventListener('touchend', removeTouchFeedback);
+        document.addEventListener('touchcancel', removeTouchFeedback);
+    }
+    
+    
 
 
     bindSwitch() {
         let isDragging = false, startX = 0, currentTranslate = 0;
         const switchButton = this.els.switchButton;
+
         const onPointerDown = (e) => {
             if (this.state.isLiveMode || this.state.isDecoding) return;
             isDragging = true;
             startX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
             switchButton.style.transition = 'none';
             e.preventDefault();
+
+            // Globale Listener erst registrieren, wenn das Ziehen tatsächlich beginnt
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
         };
+
         const onPointerMove = (e) => {
             if (!isDragging) return;
             const currentX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
@@ -1279,9 +1279,15 @@ class UIManager {
             currentTranslate = Math.max(-baseOffset, Math.min(maxSlide - baseOffset, diffX));
             switchButton.style.transform = `translateX(${baseOffset + currentTranslate}px)`;
         };
+
         const onPointerUp = async () => {
             if (!isDragging) return;
             isDragging = false;
+
+            // Globale Listener sofort wieder entfernen, um Ressourcen zu schonen
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+
             switchButton.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
             const threshold = (this.els.switchContainer.offsetWidth / 2 - 6) * 0.3;
             let shouldToggle = (this.els.stopSwitch.checked && currentTranslate < -threshold) || 
@@ -1299,11 +1305,11 @@ class UIManager {
             currentTranslate = 0;
         };
         
+        // Nur noch den initialen Trigger auf dem Container binden
         this.els.switchContainer.addEventListener('pointerdown', onPointerDown);
-        window.addEventListener('pointermove', onPointerMove);
-        window.addEventListener('pointerup', onPointerUp);
         this.els.switchLabel.addEventListener('click', (e) => e.preventDefault());
     }
+
 
     
 
@@ -1336,13 +1342,13 @@ class UIManager {
         if (this.state.isLiveMode) this.els.liveAudio.volume = finalGain;
         if (this.app.player.gainNode) this.app.player.gainNode.gain.setValueAtTime(finalGain, this.app.player.audioCtx.currentTime);
 
-        e.target.style.background = `linear-gradient(to right, var(--clr-light) ${volume}%, #444 ${volume}%)`;
+        e.target.style.background = `linear-gradient(to right, var(--clr-light) ${volume}%, var(--bg-inactive) ${volume}%)`;
     }
 
     handleSleepTimerChange(e) {
         const minutes = parseInt(e.target.value) || 0;
         const percentage = (minutes / (parseInt(e.target.max) || 60)) * 100;
-        e.target.style.background = `linear-gradient(to right, var(--clr-light) ${percentage}%, #444 ${percentage}%)`;
+        e.target.style.background = `linear-gradient(to right, var(--clr-light) ${percentage}%, var(--bg-inactive) ${percentage}%)`;
         this.state.sleepTimerEndTime = minutes > 0 ? Date.now() + minutes * 60000 : null;
     }
     
@@ -1629,14 +1635,14 @@ switchLiveStreamTo(url) {
     updateSleepTimerSlider() {
         if (!this.state.sleepTimerEndTime) {
             this.els.sleepTimerSlider.value = 0;
-            this.els.sleepTimerSlider.style.background = `linear-gradient(to right, var(--clr-light) 0%, #444 0%)`;
+            this.els.sleepTimerSlider.style.background = `linear-gradient(to right, var(--clr-light) 0%, var(--bg-inactive) 0%)`;
             return;
         }
         const remainingMinutes = Math.ceil((this.state.sleepTimerEndTime - Date.now()) / 60000);
         const max = parseInt(this.els.sleepTimerSlider.max) || 60;
         const percentage = (remainingMinutes / max) * 100;
         this.els.sleepTimerSlider.value = remainingMinutes;
-        this.els.sleepTimerSlider.style.background = `linear-gradient(to right, var(--clr-light) ${percentage}%, #444 ${percentage}%)`;
+        this.els.sleepTimerSlider.style.background = `linear-gradient(to right, var(--clr-light) ${percentage}%, var(--bg-inactive) ${percentage}%)`;
     }
 
     updateMediaSession(title, artist) {
@@ -1889,8 +1895,8 @@ class ChunkProcessor {
             this.state.firstChunkTimestamp = Date.now();
         }
 
-        const isValid = await this.isValidAudioChunk(chunkData);
-        
+        const isValid = this.isValidAudioChunk(chunkData);
+
         if (!isValid) {
             return;
         }
@@ -2137,7 +2143,7 @@ class ChunkProcessor {
     }
 
 
-    async isValidAudioChunk(data) {
+    isValidAudioChunk(data) {
         if (!data || data.length < 100) return false;
         let pos = 0;
         while (pos < data.length) {
@@ -2391,11 +2397,10 @@ class Player {
 	        this.scheduleChunk(audioBuffer);
 	    } catch (e) {
 	    } finally {
-	        this.state.isDecoding = false;
-	        
-	        if (currentGeneration === this.jumpGeneration) {
-	            this.playbackTimeoutId = setTimeout(() => this.playbackLoop(), 10);
-	        }
+            if (currentGeneration === this.jumpGeneration) {
+                this.state.isDecoding = false;
+                this.playbackTimeoutId = setTimeout(() => this.playbackLoop(), 10);
+            }
 	    }
 	}
 	
@@ -2410,11 +2415,10 @@ class Player {
 	    localGain.connect(this.gainNode);
 	
 	    const startTime = Math.max(this.audioCtx.currentTime, this.virtualPlayTime);
-	    const offset = Math.min(this.currentChunkOffset, buffer.duration - 0.1);
+	    const offset = Math.max(0, Math.min(this.currentChunkOffset, buffer.duration - 0.1));
 	    const duration = buffer.duration - offset;
 	
 	    this.currentChunkOffset = 0;
-	
 
 	    localGain.gain.setValueAtTime(0, startTime);
 	    localGain.gain.linearRampToValueAtTime(1.0, startTime + 0.015);
