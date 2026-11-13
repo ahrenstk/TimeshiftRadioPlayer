@@ -46,7 +46,8 @@ I developed the software **TimeshiftRadioPlayer** specifically for train journey
   - **Media Session API:** Lock screen controls and track status across mobile and desktop.
   - **Screen Wake Lock:** Prevents device sleep during active sessions.
   - **PWA Ready:** Includes manifest configuration and Service Worker registration.
-
+-- **Download Chunks:** Download all chunks with program `download-chunks.html`
+    
 ---
 
 ### Prerequisites
