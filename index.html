@@ -704,7 +704,7 @@ SOFTWARE.
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
 			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
-			            { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }    
+			            { name: "Ambient Sleeping Pill 2", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
 			        this.stations = [
@@ -1314,7 +1314,6 @@ SOFTWARE.
 				switchLiveStreamTo(url) {
 				    if (!url) return;
 				
-
 				    const absoluteTargetUrl = new URL(url, window.location.href).href;
 				    const absoluteCurrentUrl = this.els.liveAudio.src ? new URL(this.els.liveAudio.src, window.location.href).href : '';
 				
@@ -1324,11 +1323,37 @@ SOFTWARE.
 				    this.isLiveSwitching = true;
 				    const audio = this.els.liveAudio;
 				
-
+				    const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
+				
+				    const cleanup = () => {
+				        if (safetyTimeout) clearTimeout(safetyTimeout);
+				        audio.removeEventListener('loadedmetadata', onMetadataLoaded);
+				        audio.removeEventListener('error', onSwitchError);
+				        this.isLiveSwitching = false;
+				    };
+				
+				    const onMetadataLoaded = () => {
+				        audio.play()
+				            .then(() => {
+				                fadeVolume(0, targetVolume, 150, () => {
+				                    cleanup();
+				                });
+				            })
+				            .catch(() => {
+				                cleanup();
+				            });
+				    };
+				
+				    const onSwitchError = () => {
+				        cleanup();
+				    };
+				
 				    const safetyTimeout = setTimeout(() => {
 				        cleanup();
-				        audio.load();
 				    }, 5000);
+				
+				    audio.addEventListener('loadedmetadata', onMetadataLoaded);
+				    audio.addEventListener('error', onSwitchError);
 				
 				    const fadeVolume = (from, to, duration, callback) => {
 				        const steps = 15;
@@ -1349,47 +1374,18 @@ SOFTWARE.
 				        }, stepTime);
 				    };
 				
-				    const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
-				
-				    const onMetadataLoaded = () => {
-				        audio.play()
-				            .then(() => {
-				                fadeVolume(0, targetVolume, 150, () => {
-				                    cleanup();
-				                });
-				            })
-				            .catch(() => {
-				                cleanup();
-				            });
-				    };
-				
-				    const onSwitchError = () => {
-				        cleanup();
-				        audio.load();
-				    };
-				
-				    const cleanup = () => {
-				        clearTimeout(safetyTimeout);
-				        
-				        audio.removeEventListener('loadedmetadata', onMetadataLoaded);
-				        audio.removeEventListener('error', onSwitchError);
-				        this.isLiveSwitching = false;
-				    };
-				
-				    audio.addEventListener('loadedmetadata', onMetadataLoaded);
-				    audio.addEventListener('error', onSwitchError);
-				
-				
 				    const currentVol = audio.volume;
 				    fadeVolume(currentVol, 0, 150, () => {
-				        audio.pause();
-				        audio.src = url;
-				        audio.load();
+				        try {
+				            audio.src = url;
+				            audio.load();
+				            // Direktes play() signalisiert dem Browser, dass die Wiedergabe fortgesetzt werden soll
+				            audio.play().catch(() => {});
+				        } catch (e) {
+				            cleanup();
+				        }
 				    });
 				}
-				
-			
-			
 			
 			
 			    update() {
@@ -1399,6 +1395,7 @@ SOFTWARE.
 			        this.#updateControls();
 			        this.#updateSleepTimerSlider();
 			    }
+			
 			
 			    #updateBufferBars() {
 			        let forwardPercent = 0, rewindPercent = 0;
