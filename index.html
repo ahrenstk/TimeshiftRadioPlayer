@@ -567,6 +567,7 @@ SOFTWARE.
 			        });
 			    }
 			
+			
 			    setSetting(key, value) {
 			        return new Promise((resolve, reject) => {
 			            const tx = this.db.transaction(this.settingsStoreName, "readwrite");
@@ -576,6 +577,7 @@ SOFTWARE.
 			            request.onerror = () => reject(request.error);
 			        });
 			    }
+			
 			
 				getAllChunksData(keys) {
 				    if (!keys || keys.length === 0) return [];
@@ -615,6 +617,7 @@ SOFTWARE.
 			        });
 			    }
 			   
+			   
 			    set(id, uint8Data) {
 			        return new Promise((resolve, reject) => {
 			            const tx = this.db.transaction(this.storeName, "readwrite");
@@ -625,6 +628,7 @@ SOFTWARE.
 			        });
 			    }
 			
+			
 			    get(id) {
 			        return new Promise((resolve, reject) => {
 			            const tx = this.db.transaction(this.storeName, "readonly");
@@ -634,6 +638,7 @@ SOFTWARE.
 			            request.onerror = () => reject(request.error);
 			        });
 			    }
+			    
 			    
 			    clearAll() {
 			        return new Promise((resolve, reject) => {
@@ -660,6 +665,7 @@ SOFTWARE.
 			            };
 			        });
 			    }
+			    
 			    
 			    getAllKeys() {
 			        return new Promise((resolve, reject) => {
@@ -698,7 +704,7 @@ SOFTWARE.
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
 			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
-			            { name: "Ambient Sleeping", url: "https://radio.stereoscenic.com/asp-s" }    
+			            { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
 			        this.stations = [
@@ -720,12 +726,15 @@ SOFTWARE.
 					    { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }     
 			        ];
 			
-			
-			        this.dynamicUrls = {
-			            t1: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de",
-			            t2: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de",
-			            t3: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de",
-			            t4: "https://streams.radiobob.de/bob-bestofrock/aac-64/mediaplayer"
+                    this.dynamicUrls = {
+			            dynamic: {
+			                primary: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de",
+			                secondary: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de"
+			            },
+			            dynamic_aac: {
+			                primary: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de",
+			                secondary: "https://streams.radiobob.de/bob-bestofrock/aac-64/mediaplayer"
+			            }
 			        };
 			        
 			        this.dynamicStreamTimeout = null;
@@ -757,7 +766,7 @@ SOFTWARE.
 			        document.addEventListener("DOMContentLoaded", () => this.init());
 			    }
 			
-			
+		
 			    async init() {
 			        this.ui.collectElements();
 			        await this.chunkDB.init();
@@ -768,25 +777,15 @@ SOFTWARE.
 			        this.registerServiceWorker();
 			    }
 			    
-			    
-			    getLiveUrl() {
+			    getLiveUrl(streamType = "dynamic") {
+			        const stream = this.dynamicUrls[streamType];
+			        if (!stream) return "";
+
 			        const minute = new Date().getMinutes();
-			        if (minute >= 3 && minute < 27) return this.dynamicUrls.t1;
-			        if (minute >= 27 && minute < 33) return this.dynamicUrls.t2;
-			        if (minute >= 33 && minute < 57) return this.dynamicUrls.t1;
-			        return this.dynamicUrls.t2;
+			        const isPrimary = (minute >= 3 && minute < 27) || (minute >= 33 && minute < 57);
+			        return isPrimary ? stream.primary : stream.secondary;
 			    }
-			
-			
-			    getLiveUrl2() {
-			        const minute = new Date().getMinutes();
-			        if (minute >= 3 && minute < 27) return this.dynamicUrls.t3;
-			        if (minute >= 27 && minute < 33) return this.dynamicUrls.t4;
-			        if (minute >= 33 && minute < 57) return this.dynamicUrls.t3;
-			        return this.dynamicUrls.t4;
-			    }
-			    
-			    
+
 			    startWatchdog() {
 			        if (this.state.watchdogIntervalId) clearInterval(this.state.watchdogIntervalId);
 			        this.ui.update();
@@ -827,7 +826,6 @@ SOFTWARE.
 				            break;
 				        }
 				    }
-				    
 				    if (nextSwitchMinute === -1) {
 				        nextSwitchMinute = switchMinutes[0];
 				    }
@@ -840,22 +838,17 @@ SOFTWARE.
 				
 				    const delay = nextSwitchDate.getTime() - now.getTime();
 				
-				
 				    this.dynamicStreamTimeout = setTimeout(() => {
 				        if (this.state.isLiveMode && !this.ui.isLiveSwitching) {
 				            const selected = this.livestations[this.ui.els.liveStationSelect.value];
-				            if (selected?.url === "dynamic") {
-				                this.ui.switchLiveStreamTo(this.getLiveUrl());
-				            } else if (selected?.url === "dynamic_aac") {
-				                this.ui.switchLiveStreamTo(this.getLiveUrl2());
+				            if (selected?.url && this.dynamicUrls[selected.url]) {
+				                this.ui.switchLiveStreamTo(this.getLiveUrl(selected.url));
 				            }
 				        }
-				
 				        this.handleDynamicLiveStream();
 				    }, delay + 50);
 				}
-				
-			
+
 			
 			    async requestWakeLock() {
 			    if ('wakeLock' in navigator) {
@@ -869,8 +862,8 @@ SOFTWARE.
 			            } catch (err) {}
 			        }
 			    }
+		
 			    
-			 
 			    async loadStoredChunks() {
 			        this.ui.els.startBtn.disabled = true;
 			        this.ui.els.statusDisplay.innerText = "";
@@ -880,8 +873,7 @@ SOFTWARE.
 			        if (savedBitrate) {
 			            this.state.bitrate = savedBitrate;
 			        }
-			
-			
+
 			        const keys = await this.chunkDB.getAllKeys();
 			        if (!keys || keys.length === 0) {
 			            this.state.isStopped = true;
@@ -894,22 +886,24 @@ SOFTWARE.
 			            return;
 			        }
 			
-			        keys.sort((a, b) => (parseInt(a.split('\_')[1]) || 0) - (parseInt(b.split('\_')[1]) || 0));
+			        keys.sort((a, b) => {
+			            const timeA = parseInt(a.split('_')[1], 10) || 0;
+			            const timeB = parseInt(b.split('_')[1], 10) || 0;
+			            return timeA - timeB;
+			        });
 			        
 			        const KEEP_CHUNKS = ChunkDB.MAX_CHUNKS;
 			        if (keys.length > KEEP_CHUNKS) {
 			            const excessKeys = keys.slice(0, keys.length - KEEP_CHUNKS);
-			            const oldestKeyToKeep = keys[keys.length - KEEP_CHUNKS];
 			            keys.splice(0, keys.length - KEEP_CHUNKS);
 			
-			            
 			            await new Promise((resolve, reject) => {
 			                const tx = this.chunkDB.db.transaction(this.chunkDB.storeName, "readwrite");
 			                const store = tx.objectStore(this.chunkDB.storeName);
 			                
-			
-			                const range = IDBKeyRange.upperBound(excessKeys[excessKeys.length - 1]);
-			                const request = store.delete(range);
+			                for (let i = 0; i < excessKeys.length; i++) {
+			                    store.delete(excessKeys[i]);
+			                }
 			                
 			                tx.oncomplete = () => resolve();
 			                tx.onerror = (e) => reject(tx.error || e.target.error);
@@ -936,7 +930,7 @@ SOFTWARE.
 			                    this.player.currentChunkOffset = parseFloat(lastOffset);
 			                }
 			            } else {
-			                 if (loadedChunks.length > 1) {
+			                if (loadedChunks.length > 1) {
 			                    this.state.playedChunksHistory = loadedChunks.slice(0, -1);
 			                    this.state.playlistChunks = [loadedChunks[loadedChunks.length - 1]];
 			                } else {
@@ -954,6 +948,7 @@ SOFTWARE.
 			        this.ui.els.startBtn.disabled = false;
 			        this.ui.els.startBtn.innerText = "Start Timeshift";
 			    }
+
 			    
 			
 			    async startRadio() {
@@ -1076,20 +1071,27 @@ SOFTWARE.
 			            this.els.liveStationSelect.appendChild(option);
 			        });
 			
-			        let savedIndex = await this.app.chunkDB.getSetting("selectedStationIndex") || 0;
-			        this.els.stationSelect.value = savedIndex;
-			        this.state.streamUrl = this.app.stations[savedIndex].url;
+					const savedName = await this.app.chunkDB.getSetting("selectedStationName");
+					let targetIndex = this.app.stations.findIndex(s => s.name === savedName);
+					if (targetIndex === -1) targetIndex = 0;
+					
+					this.els.stationSelect.value = targetIndex;
+					this.state.streamUrl = this.app.stations[targetIndex].url;
+					
+
 			        this.state.bitrate = 128000;
 			
-			        let savedLiveIndex = await this.app.chunkDB.getSetting("selectedLiveStationIndex") || 0;
-			        this.els.liveStationSelect.value = savedLiveIndex;
+					const savedLiveName = await this.app.chunkDB.getSetting("selectedLiveStationName");
+					let targetLiveIndex = this.app.livestations.findIndex(s => s.name === savedLiveName);
+					if (targetLiveIndex === -1) targetLiveIndex = 0; // Fallback auf 1. Sender
+					
+					this.els.liveStationSelect.value = targetLiveIndex;
 			        
 			        this.els.startBtn.innerHTML = this.icons.play;
 			    }
 			    
 			    
 			    bindEvents() {
-			
 			        this.els.startBtn.addEventListener('click', () => {
 			            if (this.state.isLiveMode) this.stopLiveMode();
 			            if (this.state.isDecoding) return;
@@ -1150,14 +1152,12 @@ SOFTWARE.
 			            e.preventDefault();
 			        });
 			
-			
 			        this.els.startBtn.closest('.player-card').addEventListener('touchstart', (e) => {
 			            const btn = e.target.closest('.btn');
 			            if (btn && !btn.disabled) {
 			                btn.classList.add('active-touch');
 			            }
 			        }, { passive: true });
-			
 			
 			        const removeTouchFeedback = () => {
 			            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active-touch'));
@@ -1166,8 +1166,6 @@ SOFTWARE.
 			        document.addEventListener('touchcancel', removeTouchFeedback);
 			    }
 			    
-			    
-			
 			
 			    #bindSwitch() {
 			        let isDragging = false, startX = 0, currentTranslate = 0;
@@ -1225,13 +1223,13 @@ SOFTWARE.
 			    }
 			
 			
-			    
-			
 			    async handleStationChange(e) {
-			        const idx = parseInt(e.target.value, 10);
-			        this.state.streamUrl = this.app.stations[idx].url;
-			        this.state.bitrate = 128000;
-			        await this.app.chunkDB.setSetting("selectedStationIndex", idx);
+					const idx = parseInt(e.target.value, 10);
+					    const station = this.app.stations[idx];
+					    if (station) {
+					        this.state.streamUrl = station.url;
+					        await this.app.chunkDB.setSetting("selectedStationName", station.name);
+					    }
 			        
 			        if (!this.state.isStopped && !this.state.isNetworkFrozen) {
 			            this.app.streamer.disconnect();
@@ -1239,14 +1237,19 @@ SOFTWARE.
 			        }
 			    }
 			    
+			    
 			    async handleLiveStationChange(e) {
-			        const idx = parseInt(e.target.value, 10);
-			        await this.app.chunkDB.setSetting("selectedLiveStationIndex", idx);
+					const idx = parseInt(e.target.value, 10);
+					    const station = this.app.livestations[idx];
+					    if (station) {
+					        await this.app.chunkDB.setSetting("selectedLiveStationName", station.name);
+					    }
 			        if (this.state.isLiveMode) {
 			            this.stopLiveMode();
 			            this.startLiveMode();
 			        }
 			    }
+			
 			
 			    handleVolumeChange(e) {
 			        const volume = e.target.value;
@@ -1255,9 +1258,9 @@ SOFTWARE.
 			        
 			        if (this.state.isLiveMode) this.els.liveAudio.volume = finalGain;
 			        if (this.app.player.gainNode) this.app.player.gainNode.gain.setValueAtTime(finalGain, this.app.player.audioCtx.currentTime);
-			
 			        e.target.style.background = `linear-gradient(to right, var(--clr-light) ${volume}%, var(--bg-inactive) ${volume}%)`;
 			    }
+			
 			
 			    handleSleepTimerChange(e) {
 			        const minutes = parseInt(e.target.value) || 0;
@@ -1266,14 +1269,16 @@ SOFTWARE.
 			        this.state.sleepTimerEndTime = minutes > 0 ? Date.now() + minutes * 60000 : null;
 			    }
 			    
+			    
 			    startLiveMode() {
 			        if (this.state.isLiveMode) return;
 			        this.app.player.pause();
 			
 			        const selected = this.app.livestations[this.els.liveStationSelect.value];
 			        let url = selected.url;
-			        if (url === "dynamic") url = this.app.getLiveUrl();
-			        else if (url === "dynamic_aac") url = this.app.getLiveUrl2();
+			        if (this.app.dynamicUrls[url]) {
+			            url = this.app.getLiveUrl(url);
+			        }
 			
 			        this.els.liveAudio.src = url;
 			        this.els.liveAudio.load();
@@ -1284,6 +1289,7 @@ SOFTWARE.
 			        this.update();
 			        this.app.handleDynamicLiveStream(true);
 			    }
+
 			    
 			    
 				stopLiveMode() {
@@ -1425,14 +1431,11 @@ SOFTWARE.
 				
 				    const formatTime = (ts) => {
 				        const d = new Date(ts);
-				        
-			
-				        const userLang = navigator.language || 'en';
-			
-				        const weekdays = userLang.startsWith('de')
-				            ? ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"] 
-				            : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-				
+					    let weekdays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    					const browserLang = (navigator.language || '').toLowerCase();
+    					if (browserLang.startsWith('de')) {
+    					    weekdays = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+    					}
 				        return `${weekdays[d.getDay()]} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 				    };
 				
@@ -1527,7 +1530,6 @@ SOFTWARE.
 				    this.els.statusDisplay.className = statusClass;
 				}
 				
-			
 			
 			    #updateButtons() {
 			        const canPlay = this.state.playlistChunks.length >= 1 || this.state.isPlaying || this.state.isManualPause;
@@ -1800,6 +1802,61 @@ SOFTWARE.
 			        }
 			        return signatures;
 			    }
+
+				#extractValidChunk(targetMaxBytes) {
+				    let currentPos = 0;
+				    const validSegments = [];
+				    let segmentStart = 0;
+				    let accumulatedLength = 0;
+				
+				    while (currentPos < this.rawBuffer.length && (accumulatedLength + (currentPos - segmentStart)) < targetMaxBytes) {
+				        const frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
+				        if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
+				            if (currentPos > segmentStart) {
+				                validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
+				                accumulatedLength += (currentPos - segmentStart);
+				            }
+				            if (frameSize <= 0) {
+				                const nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
+				                if (nextSync !== -1) { 
+				                    currentPos = nextSync; 
+				                    segmentStart = nextSync;
+				                    continue; 
+				                } else {
+				                    segmentStart = this.rawBuffer.length;
+				                    currentPos = this.rawBuffer.length;
+				                    break;
+				                }
+				            } else {
+				                segmentStart = currentPos;
+				                break;
+				            }
+				        }
+				
+				        if ((accumulatedLength + (currentPos - segmentStart) + frameSize) > targetMaxBytes) {
+				            break;
+				        }
+				        currentPos += frameSize;
+				    }
+				
+				    if (currentPos > segmentStart) {
+				        validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
+				        accumulatedLength += (currentPos - segmentStart);
+				    }
+				
+				    if (accumulatedLength > 0) {
+				        const chunkData = new Uint8Array(accumulatedLength);
+				        let offset = 0;
+				        for (let i = 0; i < validSegments.length; i++) {
+				            chunkData.set(validSegments[i], offset);
+				            offset += validSegments[i].length;
+				        }
+				        this.rawBuffer = this.rawBuffer.slice(currentPos);
+				        return chunkData;
+				    }
+				    return null;
+				}
+
 			
 			
 			    #findOverlapOffset(buffer) {
@@ -1920,6 +1977,7 @@ SOFTWARE.
 			        return -1;
 			    }
 			
+
 				process(newData, forceFlush = false) {
 				    if (newData && newData.length > 0) {
 				        if (this.rawBuffer.length === 0) {
@@ -1932,7 +1990,7 @@ SOFTWARE.
 				        }
 				    }
 				    
-				    if (this.firstChunkInSession) {
+				    if (this.firstChunkInSession && this.rawBuffer.length > 4) {
 				        const startPos = this.#findFirstValidHeaderChain(this.rawBuffer, 0);
 				        if (startPos !== -1 && startPos + 3 < this.rawBuffer.length) {
 				            const mpegVersion = (this.rawBuffer[startPos + 1] & 0x18) >> 3;
@@ -1971,58 +2029,10 @@ SOFTWARE.
 				        if (startPos > 0) {
 				            this.rawBuffer = this.rawBuffer.slice(startPos);
 				        }
-				        
 				        this.firstChunkInSession = false;
-				        let currentPos = 0;
-				        const validSegments = [];
-				        let segmentStart = 0;
-				        let accumulatedLength = 0;
-				
-				        while (currentPos < this.rawBuffer.length && (accumulatedLength + (currentPos - segmentStart)) < bytesPerChunk) {
-				            const frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
-				            if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
-				                if (currentPos > segmentStart) {
-				                    validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-				                    accumulatedLength += (currentPos - segmentStart);
-				                }
-				                if (frameSize <= 0) {
-				                    const nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
-				                    if (nextSync !== -1) { 
-				                        currentPos = nextSync; 
-				                        segmentStart = nextSync;
-				                        continue; 
-				                    } else {
-				                        segmentStart = this.rawBuffer.length;
-				                        currentPos = this.rawBuffer.length;
-				                        break;
-				                    }
-				                } else {
-				                    segmentStart = currentPos;
-				                    break;
-				                }
-				            }
-				
-				            if ((accumulatedLength + (currentPos - segmentStart) + frameSize) > bytesPerChunk) {
-				                break;
-				            }
-				            
-				            currentPos += frameSize;
-				        }
-				
-				        if (currentPos > segmentStart) {
-				            validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-				            accumulatedLength += (currentPos - segmentStart);
-				        }
-				
-				        if (accumulatedLength > 0) {
-				            const chunkData = new Uint8Array(accumulatedLength);
-				            let offset = 0;
-				            for (const seg of validSegments) {
-				                chunkData.set(seg, offset);
-				                offset += seg.length;
-				            }
-
-				            this.rawBuffer = this.rawBuffer.slice(currentPos);
+				        
+				        const chunkData = this.#extractValidChunk(bytesPerChunk);
+				        if (chunkData) {
 				            this.#storeChunk(chunkData);
 				        } else {
 				            if (this.rawBuffer.length >= safeBufferSize) {
@@ -2033,54 +2043,14 @@ SOFTWARE.
 				    }
 				
 				    if (forceFlush && this.rawBuffer.length > 0) {
-				        let currentPos = 0;
-				        const validSegments = [];
-				        let segmentStart = 0;
-				        let accumulatedLength = 0;
-				
-				        while (currentPos < this.rawBuffer.length) {
-				            const frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
-				            if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
-				                if (currentPos > segmentStart) {
-				                    validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-				                    accumulatedLength += (currentPos - segmentStart);
-				                }
-				                if (frameSize <= 0) {
-				                    const nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
-				                    if (nextSync !== -1) {
-				                        currentPos = nextSync;
-				                        segmentStart = nextSync;
-				                        continue;
-				                    } else {
-				                        segmentStart = this.rawBuffer.length;
-				                        currentPos = this.rawBuffer.length;
-				                        break;
-				                    }
-				                } else {
-				                    segmentStart = currentPos;
-				                    break;
-				                }
-				            }
-				            currentPos += frameSize;
-				        }
-				
-				        if (currentPos > segmentStart) {
-				            validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-				            accumulatedLength += (currentPos - segmentStart);
-				        }
-				
-				        if (accumulatedLength > 0) {
-				            const chunkData = new Uint8Array(accumulatedLength);
-				            let offset = 0;
-				            for (const seg of validSegments) {
-				                chunkData.set(seg, offset);
-				                offset += seg.length;
-				            }
+				        const chunkData = this.#extractValidChunk(this.rawBuffer.length);
+				        if (chunkData) {
 				            this.#storeChunk(chunkData);
 				        }
 				        this.rawBuffer = new Uint8Array(0);
 				    }
 				}
+
 
 			
 			
@@ -2098,9 +2068,8 @@ SOFTWARE.
 			    }
 			
 			}
-			
-			
-			
+		
+
 			class Player {
 			    
 			    constructor(app) {
@@ -2115,47 +2084,188 @@ SOFTWARE.
 			        this.isRebuffering = false;
 			        this.currentChunkOffset = 0;
 			        this.jumpGeneration = 0;
+			        
+			        this.decodedCache = new Map();
+                    this.MAX_DECODED_CACHE = 3;
+			        
+			        this.lastGainNode = null;
+                    this.FADE_TIME = 0.05;
 			    }
-			
-			
-			    async initAudioContext() {
-			        if (this.audioCtx && this.audioCtx.state !== 'closed') return;
-			        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-			        if (this.audioCtx.state === "suspended") await this.audioCtx.resume();
-			
-			        this.audioCtx.onstatechange = () => {
-			            if ((this.audioCtx.state === 'suspended' || this.audioCtx.state === 'interrupted') && this.state.isPlaying) {
-			                this.audioCtx.resume().catch(() => {});
+
+				async #getOrDecodeChunk(chunkId) {
+				    if (!chunkId || !this.audioCtx) return null;
+				    if (this.decodedCache.has(chunkId)) {
+				        const cached = this.decodedCache.get(chunkId);
+				        // LRU aktualisieren
+				        this.decodedCache.delete(chunkId);
+				        this.decodedCache.set(chunkId, cached);
+				        return cached;
+				    }
+				
+
+				    const decodePromise = (async () => {
+				        try {
+				            const rawData = await this.app.chunkDB.get(chunkId);
+				            if (!rawData) return null;
+				
+				            let bufferToDecode;
+				            if (rawData.byteOffset === 0 && rawData.byteLength === rawData.buffer.byteLength) {
+				                bufferToDecode = rawData.buffer;
+				            } else {
+				                bufferToDecode = rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength);
+				            }
+				
+				            return await this.audioCtx.decodeAudioData(bufferToDecode);
+				        } catch (e) {
+				            this.decodedCache.delete(chunkId);
+				            return null;
+				        }
+				    })();
+				
+
+				    if (this.decodedCache.size >= this.MAX_DECODED_CACHE) {
+				        const oldestKey = this.decodedCache.keys().next().value;
+				        this.decodedCache.delete(oldestKey);
+				    }
+				    this.decodedCache.set(chunkId, decodePromise);
+				
+				    return decodePromise;
+				}
+				
+
+			    #preloadNeighbors() {
+
+			        if (this.state.playlistChunks.length > 0) {
+			            const nextId = this.state.playlistChunks[0].id;
+			            if (!this.decodedCache.has(nextId)) {
+			                this.#getOrDecodeChunk(nextId);
 			            }
-			        };
-			
-			        this.gainNode = this.audioCtx.createGain();
-			        const finalGain = this.app.ui.getPerceivedGain(this.app.ui.els.volumeSlider.value / 100);
-			        this.gainNode.gain.setValueAtTime(finalGain, this.audioCtx.currentTime);
-			        this.gainNode.connect(this.audioCtx.destination);
+			        }
+
+			        if (this.state.playedChunksHistory.length > 0) {
+			            const prevId = this.state.playedChunksHistory[this.state.playedChunksHistory.length - 1].id;
+			            if (!this.decodedCache.has(prevId)) {
+			                this.#getOrDecodeChunk(prevId);
+			            }
+			        }
 			    }
-			    
-			    
-			    async play() {
+
+			
+                async initAudioContext() {
+			        if (!this.audioCtx || this.audioCtx.state === 'closed') {
+			            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+			            if (!AudioContextClass) {
+			                console.error("[Player] Web Audio API wird von diesem Browser nicht unterstützt.");
+			                return;
+			            }
+			            this.audioCtx = new AudioContextClass();
+
+			            this.gainNode = this.audioCtx.createGain();
+			            const initialGain = this.app.ui.getPerceivedGain(this.app.ui.els.volumeSlider.value / 100);
+			            this.gainNode.gain.setValueAtTime(initialGain, this.audioCtx.currentTime);
+			            this.gainNode.connect(this.audioCtx.destination);
+
+			            this.audioCtx.onstatechange = () => {
+			                if ((this.audioCtx.state === 'suspended' || this.audioCtx.state === 'interrupted') && this.state.isPlaying) {
+			                    this.audioCtx.resume().catch((err) => {
+			                        console.warn("[Player] AudioContext resume fehlgeschlagen:", err);
+			                    });
+			                }
+			            };
+			        }
+
+			        if (this.audioCtx.state === "suspended") {
+			            try {
+			                await this.audioCtx.resume();
+			            } catch (err) {
+			                console.warn("[Player] Autoplay-Blockade beim Aufwecken des AudioContext:", err);
+			            }
+			        }
+			    }
+
+
+				async jumpChunks(amount) {
+				        if (this.state.isStopped || this.isJumping) return;
+				
+				        this.isJumping = true;
+				        const wasPlaying = this.state.isPlaying;
+				
+				        let preservedOffset = 0;
+				        if (this.state.currentPlayingChunkData && this.currentChunkStartTime > 0 && this.audioCtx) {
+				            preservedOffset = Math.max(0, this.audioCtx.currentTime - this.currentChunkStartTime) + this.currentChunkOffset;
+				        } else {
+				            preservedOffset = this.currentChunkOffset;
+				        }
+				
+				        this.resetScheduledPlayback();
+				        this.currentChunkOffset = preservedOffset;
+				
+				
+				        if (this.state.currentPlayingChunkData) {
+				            this.state.playlistChunks.unshift(this.state.currentPlayingChunkData);
+				            this.state.currentPlayingChunkData = null;
+				        }
+				
+				        if (amount > 0) {
+				            const toSkip = Math.min(amount, this.state.playlistChunks.length);
+				            for (let i = 0; i < toSkip; i++) {
+				                if (this.state.playlistChunks.length > 0) {
+				                    this.state.playedChunksHistory.push(this.state.playlistChunks.shift());
+				                }
+				            }
+				        } else {
+				
+				            const toRewind = Math.min(Math.abs(amount), this.state.playedChunksHistory.length);
+				            for (let i = 0; i < toRewind; i++) {
+				                if (this.state.playedChunksHistory.length > 0) {
+				                    this.state.playlistChunks.unshift(this.state.playedChunksHistory.pop());
+				                }
+				            }
+				        }
+				
+				        if (wasPlaying) {
+				            await this.#playbackLoop();
+				        }
+				        
+				        this.isJumping = false;
+				        this.app.ui.update();
+				    }
+
+
+                async play() {
 			        await this.initAudioContext();
-			        if (this.audioCtx.state === "suspended") await this.audioCtx.resume();
-			
+			        if (!this.audioCtx) return;
+
+			        if (this.audioCtx.state === "suspended") {
+			            try {
+			                await this.audioCtx.resume();
+			            } catch (err) {
+			                console.warn("[Player] Konnte AudioContext in play() nicht reaktivieren:", err);
+			            }
+			        }
+
 			        const finalGain = this.app.ui.getPerceivedGain(this.app.ui.els.volumeSlider.value / 100);
-			        this.gainNode.gain.setValueAtTime(finalGain, this.audioCtx.currentTime);
-			
+			        if (this.gainNode) {
+			            this.gainNode.gain.setValueAtTime(finalGain, this.audioCtx.currentTime);
+			        }
+
 			        this.state.isManualPause = false;
 			        this.state.isPlaying = true;
 			        this.isRebuffering = false;
-			
+
 			        if (!this.state.hasStartedPlayback) {
 			            this.virtualPlayTime = this.audioCtx.currentTime;
 			        }
-			        
+
 			        this.app.requestWakeLock();
 			        this.#playbackLoop();
-			        this.app.ui.updateMediaSession(this.app.stations[this.app.ui.els.stationSelect.value].name, "Timeshift Live Buffer");
-			    }
-			
+
+			        const selectedStation = this.app.stations[this.app.ui.els.stationSelect.value];
+			        if (selectedStation) {
+			            this.app.ui.updateMediaSession(selectedStation.name, "Timeshift Live Buffer");
+			        }
+			    }			    
+
 			
 			    pause(isManualAction = true) {
 				    if (isManualAction) {
@@ -2183,202 +2293,187 @@ SOFTWARE.
 				}
 			
 			
+			    async #playbackLoop() {
+			        if (!this.state.isPlaying || this.state.isStopped || !this.audioCtx) {
+			            return;
+			        }
 			
-			    resetScheduledPlayback() {
-				    this.jumpGeneration++;
-				    this.virtualPlayTime = 0;
-				    this.currentChunkStartTime = 0;
-				
-				    if (!this.state.isManualPause) {
-				        this.currentChunkOffset = 0;
-				    }
-				    if (this.playbackTimeoutId) clearTimeout(this.playbackTimeoutId);
-				    
-				    const now = this.audioCtx ? this.audioCtx.currentTime : 0;
-				    this.activeSources.forEach(item => {
-				        try {
-				            const { source, gainNode } = item;
-				            gainNode.gain.cancelScheduledValues(now);
-				            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-				            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.03); 
-				            source.stop(now + 0.03);
-				        } catch (e) {
-				            try { item.stop(0); item.disconnect(); } catch(err){}
-				        }
-				    });
-				    this.activeSources.clear();
-				}
+			        const currentGeneration = this.jumpGeneration;
+			        const now = this.audioCtx.currentTime;
 			
+			        if (this.virtualPlayTime < now) {
+			            this.virtualPlayTime = now + 0.05;
+			        }
 			
-				async #playbackLoop() {
-				    if (!this.state.isPlaying || this.state.isStopped || !this.audioCtx) {
-				        return;
-				    }
-				    const currentGeneration = this.jumpGeneration;
-				    const now = this.audioCtx.currentTime;
-				    if (this.virtualPlayTime < now) {
-				        this.virtualPlayTime = now + 0.05;
-				    }
-				    const scheduleAheadTime = 10.0;
-				    if ((this.virtualPlayTime - now) > scheduleAheadTime || this.state.isDecoding) {
-				        if (currentGeneration === this.jumpGeneration) {
-				            this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 100);
-				        }
-				        return;
-				    }
-				    if (this.isRebuffering) {
-				        if (this.state.playlistChunks.length >= 2 || !this.state.isConnected) {
-				            this.isRebuffering = false;
-				        } else {
-				            if (currentGeneration === this.jumpGeneration) {
-				                this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 200);
-				            }
-				            return;
-				        }
-				    }
-				    if (this.state.playlistChunks.length === 0) {
-				        if (now >= this.virtualPlayTime) {
-				            this.isRebuffering = true;
-				        }
-				        if (currentGeneration === this.jumpGeneration) {
-				            this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 250);
-				        }
-				        return;
-				    }
-				    this.state.isDecoding = true;
-				    
-				    const chunkEntry = this.state.playlistChunks.shift();
-				    try {
-				        let rawData = await this.app.chunkDB.get(chunkEntry.id);
-				        
-				        if (currentGeneration !== this.jumpGeneration) {
-				            return; 
-				        }
-				        if (!rawData) {
-				            return;
-				        }
-				        let bufferToDecode;
-				        if (rawData.byteOffset === 0 && rawData.byteLength === rawData.buffer.byteLength) {
-				            bufferToDecode = rawData.buffer;
-				        } else {
-				            bufferToDecode = rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength);
-				        }
-				        rawData = null;
+			        const scheduleAheadTime = 10.0;
+			        if ((this.virtualPlayTime - now) > scheduleAheadTime || this.state.isDecoding) {
+			            if (currentGeneration === this.jumpGeneration) {
+			                this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 100);
+			            }
+			            return;
+			        }
+			
+			        if (this.isRebuffering) {
+			            if (this.state.playlistChunks.length >= 2 || !this.state.isConnected) {
+			                this.isRebuffering = false;
+			            } else {
+			                if (currentGeneration === this.jumpGeneration) {
+			                    this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 200);
+			                }
+			                return;
+			            }
+			        }
+			
+			        if (this.state.playlistChunks.length === 0) {
+			            if (now >= this.virtualPlayTime) {
+			                this.isRebuffering = true;
+			            }
+			            if (currentGeneration === this.jumpGeneration) {
+			                this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 250);
+			            }
+			            return;
+			        }
+			
+			        this.state.isDecoding = true;
+			        const chunkEntry = this.state.playlistChunks.shift();
+			
+			        try {
 
-				        let audioBuffer = null;
-				        try {
-				            audioBuffer = await this.audioCtx.decodeAudioData(bufferToDecode);
-				        } catch (err) {
-				            audioBuffer = null;
-				        }
-				        bufferToDecode = null;
+			            const audioBuffer = await this.#getOrDecodeChunk(chunkEntry.id);
+			
+
+			            if (currentGeneration !== this.jumpGeneration) {
+			                return;
+			            }
+			
+			            if (!audioBuffer) {
+			                return;
+			            }
+			
+			            if (!this.state.isPlaying) {
+			                this.state.playlistChunks.unshift(chunkEntry);
+			                return;
+			            }
+			
+			            if (this.state.currentPlayingChunkData) {
+			                this.state.playedChunksHistory.push(this.state.currentPlayingChunkData);
+			            }
+			            this.state.currentPlayingChunkData = chunkEntry;
+			            this.state.hasStartedPlayback = true;
+			
+			            await this.app.chunkDB.setSetting("lastPlayingChunkId", chunkEntry.id);
+			            await this.app.chunkDB.setSetting("lastPlayingChunkOffset", 0);
+			
+
+			            this.#scheduleChunk(audioBuffer);
+			
+
+			            this.#preloadNeighbors();
+			        } catch (e) {
+			            console.error("[Player] Unerwarteter Fehler in #playbackLoop:", e);
+			        } finally {
+			            this.state.isDecoding = false;
+			            if (currentGeneration === this.jumpGeneration) {
+			                this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 10);
+			            }
+			        }
+			    }
+			
+
+
+
+
+			    resetScheduledPlayback() {
+			        this.jumpGeneration++;
+			        this.virtualPlayTime = 0;
+			        this.currentChunkStartTime = 0;
+			        this.lastGainNode = null; 
+			    
+			        if (!this.state.isManualPause) {
+			            this.currentChunkOffset = 0;
+			        }
+			        if (this.playbackTimeoutId) clearTimeout(this.playbackTimeoutId);
+			        
+			        const now = this.audioCtx ? this.audioCtx.currentTime : 0;
+			        this.activeSources.forEach(item => {
+			            try {
+			                const { source, gainNode } = item;
+			                gainNode.gain.cancelScheduledValues(now);
+			                gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+			                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.03); 
+			                source.stop(now + 0.03);
+			            } catch (e) {
+			                try { item.stop(0); item.disconnect(); } catch(err){}
+			            }
+			        });
+			        this.activeSources.clear();
+			    }
 				
-				        if (currentGeneration !== this.jumpGeneration) {
-				            return;
-				        }
-				        if (!audioBuffer || !this.state.isPlaying) {
-				            if (audioBuffer && !this.state.isPlaying) {
-				                this.state.playlistChunks.unshift(chunkEntry);
-				            }
-				            return;
-				        }
-				
-				        if (this.state.currentPlayingChunkData) {
-				            this.state.playedChunksHistory.push(this.state.currentPlayingChunkData);
-				        }
-				        this.state.currentPlayingChunkData = chunkEntry;
-				        this.state.hasStartedPlayback = true;
-				        
-				        await this.app.chunkDB.setSetting("lastPlayingChunkId", chunkEntry.id);
-				        await this.app.chunkDB.setSetting("lastPlayingChunkOffset", 0);
-				        this.#scheduleChunk(audioBuffer);
-				    } catch (e) {
-				    } finally {
-                        this.state.isDecoding = false;
-                        if (currentGeneration === this.jumpGeneration) {
-                            this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 10);
-                        }
-				    }
-				}
-								    
 
 			    #scheduleChunk(buffer) {
-				    const source = this.audioCtx.createBufferSource();
-				    source.buffer = buffer;
-				    
+			        const source = this.audioCtx.createBufferSource();
+			        source.buffer = buffer;
 			
-				    const localGain = this.audioCtx.createGain();
-				    source.connect(localGain);
-				    localGain.connect(this.gainNode);
-				
-				    const startTime = Math.max(this.audioCtx.currentTime, this.virtualPlayTime);
-				    const offset = Math.max(0, Math.min(this.currentChunkOffset, buffer.duration - 0.1));
-				    const duration = buffer.duration - offset;
-				
-				    this.currentChunkOffset = 0;
+			        const localGain = this.audioCtx.createGain();
+			        source.connect(localGain);
+			        localGain.connect(this.gainNode);
 			
-				    localGain.gain.setValueAtTime(0, startTime);
-				    localGain.gain.linearRampToValueAtTime(1.0, startTime + 0.015);
-				
-				    source.start(startTime, offset);
-				
-				    this.currentChunkStartTime = startTime - offset;
-				    this.virtualPlayTime = startTime + duration;
-				
-				    const item = { source, gainNode: localGain };
-				    this.activeSources.add(item);
-				
-				    source.onended = () => {
-				        this.activeSources.delete(item);
-				        try { source.disconnect(); localGain.disconnect(); } catch (e) {}
-				    };
-				}
+			        const now = this.audioCtx.currentTime;
+			        const offset = Math.max(0, Math.min(this.currentChunkOffset, buffer.duration - 0.1));
+			        const duration = buffer.duration - offset;
+			        this.currentChunkOffset = 0;
 			
-			    
-			    async jumpChunks(amount) {
-			        if (this.state.isStopped || this.isJumping) return;
+			        const isSeamless = (this.virtualPlayTime > now && this.lastGainNode !== null);
+			        const fadeDuration = this.FADE_TIME;
 			
-			        this.isJumping = true;
-			        const wasPlaying = this.state.isPlaying;
-			
-			        let preservedOffset = 0;
-			        if (this.state.currentPlayingChunkData && this.currentChunkStartTime > 0 && this.audioCtx) {
-			            preservedOffset = Math.max(0, this.audioCtx.currentTime - this.currentChunkStartTime) + this.currentChunkOffset;
-			        } else {
-			            preservedOffset = this.currentChunkOffset;
+			        let startTime = Math.max(now, this.virtualPlayTime);
+			        if (isSeamless) {
+			            startTime = Math.max(now, this.virtualPlayTime - fadeDuration);
 			        }
+			
+			        if (isSeamless) {
+			            const prevGain = this.lastGainNode;
+			            try {
 
-			        this.resetScheduledPlayback();
-			        this.currentChunkOffset = preservedOffset;
+			                prevGain.gain.cancelScheduledValues(startTime);
+			                prevGain.gain.setValueAtTime(1.0, startTime);
+			                prevGain.gain.linearRampToValueAtTime(0.0, startTime + fadeDuration);
+			            } catch (e) {}
 			
-			
-			        if (amount > 0) {
-			            if (this.state.currentPlayingChunkData) this.state.playedChunksHistory.push(this.state.currentPlayingChunkData);
-			            const toSkip = Math.min(amount, this.state.playlistChunks.length);
-			            for (let i = 0; i < toSkip - 1; i++) {
-			                if (this.state.playlistChunks.length > 0) this.state.playedChunksHistory.push(this.state.playlistChunks.shift());
-			            }
+
+			            localGain.gain.setValueAtTime(0.0, startTime);
+			            localGain.gain.linearRampToValueAtTime(1.0, startTime + fadeDuration);
 			        } else {
-			            if (this.state.currentPlayingChunkData) this.state.playlistChunks.unshift(this.state.currentPlayingChunkData);
-			            const toRewind = Math.min(Math.abs(amount), this.state.playedChunksHistory.length);
-			            for (let i = 0; i < toRewind; i++) {
-			                 if (this.state.playedChunksHistory.length > 0) this.state.playlistChunks.unshift(this.state.playedChunksHistory.pop());
+
+			            localGain.gain.setValueAtTime(0.0, startTime);
+			            localGain.gain.linearRampToValueAtTime(1.0, startTime + 0.01);
+			        }
+			
+			        source.start(startTime, offset);
+			
+			        this.currentChunkStartTime = startTime - offset;
+			        this.virtualPlayTime = startTime + duration;
+			        this.lastGainNode = localGain;
+			
+			        const item = { source, gainNode: localGain };
+			        this.activeSources.add(item);
+			
+			        source.onended = () => {
+			            if (this.lastGainNode === localGain) {
+			                this.lastGainNode = null;
 			            }
-			        }
-			        
-			        this.state.currentPlayingChunkData = null;
-			        
-			        if (wasPlaying) {
-			            await this.#playbackLoop();
-			        }
-			        
-			        this.isJumping = false;
-			        this.app.ui.update();
+			            this.activeSources.delete(item);
+			            try { 
+			                source.disconnect(); 
+			                localGain.disconnect(); 
+			            } catch (e) {}
+			        };
 			    }
+			
+
 			}
 			
 			new App();
-		    
 	    
 	</script>
 	
