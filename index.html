@@ -698,7 +698,7 @@ SOFTWARE.
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
 			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
-			            { name: "Ambient Sleeping", url: "https://radio.stereoscenic.com/asp-s" }    
+			            { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
 			        this.stations = [
@@ -995,32 +995,40 @@ SOFTWARE.
 			    }
 			
 			    
-			    registerServiceWorker() {
-			        if ('serviceWorker' in navigator) {
-			            let refreshing = false;
-			
-			            navigator.serviceWorker.addEventListener('controllerchange', () => {
-			                if (!refreshing && navigator.onLine) {
-			                    refreshing = true;
-			                    window.location.reload();
-			                }
-			            });
-			
-			            window.addEventListener('load', () => {
-			                navigator.serviceWorker.register('./sw.js').then((registration) => {
-			                    registration.update().catch(() => {
-			                        console.log("Cold start: Update check skipped offline.");
-			                    });
-			                }).catch((err) => {
-			                    console.warn("Service Worker loaded in offline mode:", err);
-			                });
-			            });
-			
-			        }
-			    }
-			
-			
-			
+				registerServiceWorker() {
+				    if (!('serviceWorker' in navigator)) return;
+				
+				    let refreshing = false;
+
+				    navigator.serviceWorker.addEventListener('controllerchange', () => {
+				        if (!refreshing) {
+				            refreshing = true;
+				            window.location.reload();
+				        }
+				    });
+				
+				    const initSW = async () => {
+				        try {
+				            const registration = await navigator.serviceWorker.register('./sw.js');
+				
+				            registration.update().catch(() => {});
+				
+				            document.addEventListener('visibilitychange', () => {
+				                if (document.visibilityState === 'visible') {
+				                    registration.update().catch(() => {});
+				                }
+				            });
+				        } catch (err) {
+				            console.warn("Service Worker loaded in offline mode or failed:", err);
+				        }
+				    };
+				
+				    if (document.readyState === 'complete') {
+				        initSW();
+				    } else {
+				        window.addEventListener('load', initSW);
+				    }
+				}
 			}
 			
 			class UIManager {
