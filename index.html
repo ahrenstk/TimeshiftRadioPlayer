@@ -443,7 +443,6 @@ SOFTWARE.
 			    border: var(--border-width) solid var(--text-disabled, #b0b0b0) !important;
 			}
 		</style>
-
 		
 	</head>
 
@@ -699,6 +698,7 @@ getAllChunksData(keys) {
 			            { name: 'Klassik Radio', url: 'https://klassikr.streamabc.net/klr-krdnational-mp3-192-8877033' },
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
+			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
 			            { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
@@ -717,6 +717,7 @@ getAllChunksData(keys) {
 					    { name: 'Absolut relax', url: 'https://absolut-relax.live-sm.absolutradio.de/absolut-relax' },    
 					    { name: 'Klassik Radio', url: 'https://klassikr.streamabc.net/klr-krdnational-mp3-192-8877033' },
 					    { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http" },
+					    { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
 					    { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }     
 			        ];
 			
@@ -840,16 +841,6 @@ getAllChunksData(keys) {
 				
 				    const delay = nextSwitchDate.getTime() - now.getTime();
 				
-				   
-				    if (isInitialCall) {
-				        const selected = this.livestations[this.ui.els.liveStationSelect.value];
-				        if (selected?.url === "dynamic") {
-				            this.ui.switchLiveStreamTo(this.getLiveUrl());
-				        } else if (selected?.url === "dynamic_aac") {
-				            this.ui.switchLiveStreamTo(this.getLiveUrl2());
-				        }
-				    }
-				    
 				
 				    this.dynamicStreamTimeout = setTimeout(() => {
 				        if (this.state.isLiveMode && !this.ui.isLiveSwitching) {
@@ -864,6 +855,7 @@ getAllChunksData(keys) {
 				        this.handleDynamicLiveStream();
 				    }, delay + 50);
 				}
+				
 			
 			
 			    async requestWakeLock() {
@@ -1286,82 +1278,103 @@ getAllChunksData(keys) {
 			        this.app.handleDynamicLiveStream(true);
 			    }
 			    
-			    stopLiveMode() {
-			        if (!this.state.isLiveMode) return; 
-			        this.state.isLiveMode = false;
-			        this.els.liveAudio.pause();
-			        this.els.liveAudio.removeAttribute('src');
-			        this.els.liveAudio.load();
-			        if (this.app.dynamicStreamTimeout) {
-			        clearTimeout(this.app.dynamicStreamTimeout);
-			        this.app.dynamicStreamTimeout = null;
-			    }
-			        this.update();
-			    }
 			    
-			switchLiveStreamTo(url) {
-			    if (this.isLiveSwitching || !url || (this.els.liveAudio.src && new URL(url, window.location.href).href === this.els.liveAudio.src)) {
-			        return;
-			    }
-			    this.isLiveSwitching = true;
-			    const audio = this.els.liveAudio;
-			
-			
-			    const fadeVolume = (from, to, duration, callback) => {
-			        const steps = 15;
-			        const stepTime = duration / steps;
-			        const volumeStep = (to - from) / steps;
-			        let currentStep = 0;
-			
-			        const interval = setInterval(() => {
-			            currentStep++;
-			            const nextVolume = Math.max(0, Math.min(1, from + volumeStep * currentStep));
-			            audio.volume = nextVolume;
-			
-			            if (currentStep >= steps) {
-			                clearInterval(interval);
-			                audio.volume = to;
-			                if (callback) callback();
-			            }
-			        }, stepTime);
-			    };
-			
-			    const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
-			
-			    const onMetadataLoaded = () => {
-			        audio.play()
-			            .then(() => {
-			                fadeVolume(0, targetVolume, 150, () => {
-			                    cleanup();
-			                });
-			            })
-			            .catch(() => {
-			                cleanup();
-			            });
-			    };
-			
-			    const onSwitchError = () => {
-			        cleanup();
-			        audio.load();
-			    };
-			
-			    const cleanup = () => {
-			        audio.removeEventListener('loadedmetadata', onMetadataLoaded);
-			        audio.removeEventListener('error', onSwitchError);
-			        this.isLiveSwitching = false;
-			    };
-			
-			    audio.addEventListener('loadedmetadata', onMetadataLoaded);
-			    audio.addEventListener('error', onSwitchError);
-			
-			
-			    const currentVol = audio.volume;
-			    fadeVolume(currentVol, 0, 150, () => {
-			        audio.pause();
-			        audio.src = url;
-			        audio.load();
-			    });
-			}
+				stopLiveMode() {
+				    if (!this.state.isLiveMode) return; 
+				    this.state.isLiveMode = false;
+				    
+				    this.isLiveSwitching = false;
+				    
+				    this.els.liveAudio.pause();
+				    this.els.liveAudio.removeAttribute('src');
+				    this.els.liveAudio.load();
+				    
+				    if (this.app.dynamicStreamTimeout) {
+				        clearTimeout(this.app.dynamicStreamTimeout);
+				        this.app.dynamicStreamTimeout = null;
+				    }
+				    
+				    this.update();
+				}
+				
+			    
+				switchLiveStreamTo(url) {
+				    if (!url) return;
+				
+
+				    const absoluteTargetUrl = new URL(url, window.location.href).href;
+				    const absoluteCurrentUrl = this.els.liveAudio.src ? new URL(this.els.liveAudio.src, window.location.href).href : '';
+				
+				    if (this.isLiveSwitching || absoluteTargetUrl === absoluteCurrentUrl) {
+				        return;
+				    }
+				    this.isLiveSwitching = true;
+				    const audio = this.els.liveAudio;
+				
+
+				    const safetyTimeout = setTimeout(() => {
+				        cleanup();
+				        audio.load();
+				    }, 5000);
+				
+				    const fadeVolume = (from, to, duration, callback) => {
+				        const steps = 15;
+				        const stepTime = duration / steps;
+				        const volumeStep = (to - from) / steps;
+				        let currentStep = 0;
+				
+				        const interval = setInterval(() => {
+				            currentStep++;
+				            const nextVolume = Math.max(0, Math.min(1, from + volumeStep * currentStep));
+				            audio.volume = nextVolume;
+				
+				            if (currentStep >= steps) {
+				                clearInterval(interval);
+				                audio.volume = to;
+				                if (callback) callback();
+				            }
+				        }, stepTime);
+				    };
+				
+				    const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
+				
+				    const onMetadataLoaded = () => {
+				        audio.play()
+				            .then(() => {
+				                fadeVolume(0, targetVolume, 150, () => {
+				                    cleanup();
+				                });
+				            })
+				            .catch(() => {
+				                cleanup();
+				            });
+				    };
+				
+				    const onSwitchError = () => {
+				        cleanup();
+				        audio.load();
+				    };
+				
+				    const cleanup = () => {
+				        clearTimeout(safetyTimeout);
+				        
+				        audio.removeEventListener('loadedmetadata', onMetadataLoaded);
+				        audio.removeEventListener('error', onSwitchError);
+				        this.isLiveSwitching = false;
+				    };
+				
+				    audio.addEventListener('loadedmetadata', onMetadataLoaded);
+				    audio.addEventListener('error', onSwitchError);
+				
+				
+				    const currentVol = audio.volume;
+				    fadeVolume(currentVol, 0, 150, () => {
+				        audio.pause();
+				        audio.src = url;
+				        audio.load();
+				    });
+				}
+				
 			
 			
 			
@@ -1645,10 +1658,24 @@ getAllChunksData(keys) {
 			        this.controller = new AbortController();
 			        this.state.isConnecting = true;
 			        this.state.lastDataTime = Date.now();
+			
+			        const connectTimeoutId = setTimeout(() => {
+			            if (this.state.isConnecting && this.controller) {
+			                this.controller.abort();
+			            }
+			        }, 8000);
+			
 			        try {
 			            const url = this.state.streamUrl + (this.state.streamUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
 			            const response = await fetch(url, { signal: this.controller.signal, cache: "no-store", mode: "cors" });
-			            if (!response.ok) return;
+			            
+
+			            clearTimeout(connectTimeoutId);
+			
+			            if (!response.ok) {
+			                this.state.isConnecting = false;
+			                return;
+			            }
 			            if (!response.body) {
 			                this.state.isConnecting = false;
 			                return;
@@ -1660,11 +1687,13 @@ getAllChunksData(keys) {
 			            this.chunkProcessor.prepareReconnect();
 			            await this.#readLoop();
 			        } catch (e) {
+			            clearTimeout(connectTimeoutId);
 			            this.state.isConnected = false;
 			            this.state.isConnecting = false;
 			            this.reader = null;
 			        }
 			    }
+			
 			
 			
 			    disconnect(forceFlush = false) {
@@ -1705,12 +1734,6 @@ getAllChunksData(keys) {
 				ensureConnection() {
 				    if (this.state.isStopped || this.state.isNetworkFrozen) return;
 				    
-				    if (navigator.onLine === false) {
-				        this.state.isConnected = false;
-				        this.state.isConnecting = false;
-				        return;
-				    }
-				
 				    const stalled = Date.now() - this.state.lastDataTime > 10000;
 				    const idle = !this.state.isConnected && !this.state.isConnecting;
 				    const cooldownPassed = Date.now() - this.lastConnectTime > 5000;
@@ -1890,160 +1913,168 @@ getAllChunksData(keys) {
 			        return -1;
 			    }
 			
-			
-			    process(newData, forceFlush = false) {
-			        let combined = new Uint8Array(this.rawBuffer.length + newData.length);
-			        combined.set(this.rawBuffer);
-			        combined.set(newData, this.rawBuffer.length);
-			        this.rawBuffer = combined;
-			        
-			        if (this.firstChunkInSession) {
-			            let startPos = this.#findFirstValidHeaderChain(this.rawBuffer, 0);
-			            if (startPos !== -1 && startPos + 3 < this.rawBuffer.length) {
-			                const mpegVersion = (this.rawBuffer[startPos + 1] & 0x18) >> 3;
-			                const bitrateIdx = (this.rawBuffer[startPos + 2] & 0xF0) >> 4;
-			
-			                const bitratesMPEG1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0];
-			                const bitratesMPEG2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0];
-			
-			                let detectedBitrate = (mpegVersion === 3) ? bitratesMPEG1[bitrateIdx] * 1000 : bitratesMPEG2[bitrateIdx] * 1000;
-			
-			                if (detectedBitrate > 0 && detectedBitrate !== this.state.bitrate) {
-			                    this.state.bitrate = detectedBitrate;
-			                    this.app.chunkDB.setSetting("lastDetectedBitrate", detectedBitrate);
-			                }
-			            }
-			        }        
-			        if (this.isReconnect && this.rawBuffer.length > 0) {
-			            const overlapOffset = this.#findOverlapOffset(this.rawBuffer);
-			            if (overlapOffset !== -1) {
-			                this.rawBuffer = this.rawBuffer.subarray(overlapOffset);
-			            }
-			            this.isReconnect = false;
-			        }
-			        
-			        const bytesPerChunk = (this.state.bitrate / 8) * 60;
-			        const safeBufferSize = bytesPerChunk + 65536;
-			
-			        while (this.rawBuffer.length >= safeBufferSize) {
-			            let startPos = this.firstChunkInSession ? this.#findFirstValidHeaderChain(this.rawBuffer, 0) : 0;
-			            
-			            if (startPos === -1) { 
-			                this.rawBuffer = new Uint8Array(0); 
-			                break; 
-			            }
-			            if (startPos > 0) {
-			                this.rawBuffer = this.rawBuffer.subarray(startPos);
-			            }
-			            
-			            this.firstChunkInSession = false;
-			            let currentPos = 0;
-			            let validSegments = [];
-			            let segmentStart = 0;
-			            let accumulatedLength = 0;
-			
-			            while (currentPos < this.rawBuffer.length && (accumulatedLength + (currentPos - segmentStart)) < bytesPerChunk) {
-			                let frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
-			                if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
-			                    if (currentPos > segmentStart) {
-			                        validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-			                        accumulatedLength += (currentPos - segmentStart);
-			                    }
-			                    if (frameSize <= 0) {
-			                        let nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
-			                        if (nextSync !== -1) { 
-			                            currentPos = nextSync; 
-			                            segmentStart = nextSync;
-			                            continue; 
-			                        } else {
-			                            segmentStart = this.rawBuffer.length;
-			                            currentPos = this.rawBuffer.length;
-			                            break;
-			                        }
-			                    } else {
-			                        segmentStart = currentPos;
-			                        break;
-			                    }
-			                }
-			
-			                if ((accumulatedLength + (currentPos - segmentStart) + frameSize) > bytesPerChunk) {
-			                    break;
-			                }
-			                
-			                currentPos += frameSize;
-			            }
-			
-			            if (currentPos > segmentStart) {
-			                validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-			                accumulatedLength += (currentPos - segmentStart);
-			            }
-			
-			            if (accumulatedLength > 0) {
-			                const chunkData = new Uint8Array(accumulatedLength);
-			                let offset = 0;
-			                for (const seg of validSegments) {
-			                    chunkData.set(seg, offset);
-			                    offset += seg.length;
-			                }
-			                this.rawBuffer = this.rawBuffer.subarray(currentPos);
-			                this.#storeChunk(chunkData);
-			            } else {
-			                if (this.rawBuffer.length >= safeBufferSize) {
-			                    this.rawBuffer = this.rawBuffer.subarray(safeBufferSize);
-			                }
-			                break;
-			            }
-			        }
-			
-			        if (forceFlush && this.rawBuffer.length > 0) {
-			            let currentPos = 0;
-			            let validSegments = [];
-			            let segmentStart = 0;
-			            let accumulatedLength = 0;
-			
-			            while (currentPos < this.rawBuffer.length) {
-			                let frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
-			                if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
-			                    if (currentPos > segmentStart) {
-			                        validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-			                        accumulatedLength += (currentPos - segmentStart);
-			                    }
-			                    if (frameSize <= 0) {
-			                        let nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
-			                        if (nextSync !== -1) {
-			                            currentPos = nextSync;
-			                            segmentStart = nextSync;
-			                            continue;
-			                        } else {
-			                            segmentStart = this.rawBuffer.length;
-			                            currentPos = this.rawBuffer.length;
-			                            break;
-			                        }
-			                    } else {
-			                        segmentStart = currentPos;
-			                        break;
-			                    }
-			                }
-			                currentPos += frameSize;
-			            }
-			
-			            if (currentPos > segmentStart) {
-			                validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
-			                accumulatedLength += (currentPos - segmentStart);
-			            }
-			
-			            if (accumulatedLength > 0) {
-			                const chunkData = new Uint8Array(accumulatedLength);
-			                let offset = 0;
-			                for (const seg of validSegments) {
-			                    chunkData.set(seg, offset);
-			                    offset += seg.length;
-			                }
-			                this.#storeChunk(chunkData);
-			            }
-			            this.rawBuffer = new Uint8Array(0);
-			        }
-			    }
+				process(newData, forceFlush = false) {
+				    if (newData && newData.length > 0) {
+				        if (this.rawBuffer.length === 0) {
+				            this.rawBuffer = newData;
+				        } else {
+				            const combined = new Uint8Array(this.rawBuffer.length + newData.length);
+				            combined.set(this.rawBuffer);
+				            combined.set(newData, this.rawBuffer.length);
+				            this.rawBuffer = combined;
+				        }
+				    }
+				    
+				    if (this.firstChunkInSession) {
+				        const startPos = this.#findFirstValidHeaderChain(this.rawBuffer, 0);
+				        if (startPos !== -1 && startPos + 3 < this.rawBuffer.length) {
+				            const mpegVersion = (this.rawBuffer[startPos + 1] & 0x18) >> 3;
+				            const bitrateIdx = (this.rawBuffer[startPos + 2] & 0xF0) >> 4;
+				
+				            const bitratesMPEG1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0];
+				            const bitratesMPEG2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0];
+				
+				            const detectedBitrate = (mpegVersion === 3) ? bitratesMPEG1[bitrateIdx] * 1000 : bitratesMPEG2[bitrateIdx] * 1000;
+				
+				            if (detectedBitrate > 0 && detectedBitrate !== this.state.bitrate) {
+				                this.state.bitrate = detectedBitrate;
+				                this.app.chunkDB.setSetting("lastDetectedBitrate", detectedBitrate);
+				            }
+				        }
+				    }        
+				
+				    if (this.isReconnect && this.rawBuffer.length > 0) {
+				        const overlapOffset = this.#findOverlapOffset(this.rawBuffer);
+				        if (overlapOffset !== -1) {
+				            this.rawBuffer = this.rawBuffer.slice(overlapOffset);
+				        }
+				        this.isReconnect = false;
+				    }
+				    
+				    const bytesPerChunk = (this.state.bitrate / 8) * 60;
+				    const safeBufferSize = bytesPerChunk + 65536;
+				
+				    while (this.rawBuffer.length >= safeBufferSize) {
+				        const startPos = this.firstChunkInSession ? this.#findFirstValidHeaderChain(this.rawBuffer, 0) : 0;
+				        
+				        if (startPos === -1) { 
+				            this.rawBuffer = new Uint8Array(0); 
+				            break; 
+				        }
+				        if (startPos > 0) {
+				            this.rawBuffer = this.rawBuffer.slice(startPos);
+				        }
+				        
+				        this.firstChunkInSession = false;
+				        let currentPos = 0;
+				        const validSegments = [];
+				        let segmentStart = 0;
+				        let accumulatedLength = 0;
+				
+				        while (currentPos < this.rawBuffer.length && (accumulatedLength + (currentPos - segmentStart)) < bytesPerChunk) {
+				            const frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
+				            if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
+				                if (currentPos > segmentStart) {
+				                    validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
+				                    accumulatedLength += (currentPos - segmentStart);
+				                }
+				                if (frameSize <= 0) {
+				                    const nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
+				                    if (nextSync !== -1) { 
+				                        currentPos = nextSync; 
+				                        segmentStart = nextSync;
+				                        continue; 
+				                    } else {
+				                        segmentStart = this.rawBuffer.length;
+				                        currentPos = this.rawBuffer.length;
+				                        break;
+				                    }
+				                } else {
+				                    segmentStart = currentPos;
+				                    break;
+				                }
+				            }
+				
+				            if ((accumulatedLength + (currentPos - segmentStart) + frameSize) > bytesPerChunk) {
+				                break;
+				            }
+				            
+				            currentPos += frameSize;
+				        }
+				
+				        if (currentPos > segmentStart) {
+				            validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
+				            accumulatedLength += (currentPos - segmentStart);
+				        }
+				
+				        if (accumulatedLength > 0) {
+				            const chunkData = new Uint8Array(accumulatedLength);
+				            let offset = 0;
+				            for (const seg of validSegments) {
+				                chunkData.set(seg, offset);
+				                offset += seg.length;
+				            }
+
+				            this.rawBuffer = this.rawBuffer.slice(currentPos);
+				            this.#storeChunk(chunkData);
+				        } else {
+				            if (this.rawBuffer.length >= safeBufferSize) {
+				                this.rawBuffer = this.rawBuffer.slice(safeBufferSize);
+				            }
+				            break;
+				        }
+				    }
+				
+				    if (forceFlush && this.rawBuffer.length > 0) {
+				        let currentPos = 0;
+				        const validSegments = [];
+				        let segmentStart = 0;
+				        let accumulatedLength = 0;
+				
+				        while (currentPos < this.rawBuffer.length) {
+				            const frameSize = this.#getFrameSize(this.rawBuffer, currentPos);
+				            if (frameSize <= 0 || currentPos + frameSize > this.rawBuffer.length) {
+				                if (currentPos > segmentStart) {
+				                    validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
+				                    accumulatedLength += (currentPos - segmentStart);
+				                }
+				                if (frameSize <= 0) {
+				                    const nextSync = this.#findFirstValidHeaderChain(this.rawBuffer, currentPos + 1);
+				                    if (nextSync !== -1) {
+				                        currentPos = nextSync;
+				                        segmentStart = nextSync;
+				                        continue;
+				                    } else {
+				                        segmentStart = this.rawBuffer.length;
+				                        currentPos = this.rawBuffer.length;
+				                        break;
+				                    }
+				                } else {
+				                    segmentStart = currentPos;
+				                    break;
+				                }
+				            }
+				            currentPos += frameSize;
+				        }
+				
+				        if (currentPos > segmentStart) {
+				            validSegments.push(this.rawBuffer.subarray(segmentStart, currentPos));
+				            accumulatedLength += (currentPos - segmentStart);
+				        }
+				
+				        if (accumulatedLength > 0) {
+				            const chunkData = new Uint8Array(accumulatedLength);
+				            let offset = 0;
+				            for (const seg of validSegments) {
+				                chunkData.set(seg, offset);
+				                offset += seg.length;
+				            }
+				            this.#storeChunk(chunkData);
+				        }
+				        this.rawBuffer = new Uint8Array(0);
+				    }
+				}
+
 			
 			
 			    #isValidAudioChunk(data) {
@@ -2076,19 +2107,6 @@ getAllChunksData(keys) {
 			        this.currentChunkStartTime = 0;
 			        this.isRebuffering = false;
 			        this.currentChunkOffset = 0;
-			        
-			        const workerCode = `
-			            self.onmessage = e => { 
-			                const { id, buffer } = e.data;
-			                self.postMessage({ id, buffer }, [buffer]); 
-			            };
-			        `;
-			        const blob = new Blob([workerCode], { type: 'application/javascript' });
-			        const workerUrl = URL.createObjectURL(blob);
-			
-			        this.audioWorker = new Worker(workerUrl);
-			        URL.revokeObjectURL(workerUrl); 
-			        this.workerMsgId = 0;
 			        this.jumpGeneration = 0;
 			    }
 			
@@ -2097,6 +2115,13 @@ getAllChunksData(keys) {
 			        if (this.audioCtx && this.audioCtx.state !== 'closed') return;
 			        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 			        if (this.audioCtx.state === "suspended") await this.audioCtx.resume();
+			
+			        this.audioCtx.onstatechange = () => {
+			            if ((this.audioCtx.state === 'suspended' || this.audioCtx.state === 'interrupted') && this.state.isPlaying) {
+			                this.audioCtx.resume().catch(() => {});
+			            }
+			        };
+			
 			        this.gainNode = this.audioCtx.createGain();
 			        const finalGain = this.app.ui.getPerceivedGain(this.app.ui.els.volumeSlider.value / 100);
 			        this.gainNode.gain.setValueAtTime(finalGain, this.audioCtx.currentTime);
@@ -2178,8 +2203,7 @@ getAllChunksData(keys) {
 				}
 			
 			
-				    
-			    async #playbackLoop() {
+				async #playbackLoop() {
 				    if (!this.state.isPlaying || this.state.isStopped || !this.audioCtx) {
 				        return;
 				    }
@@ -2218,7 +2242,6 @@ getAllChunksData(keys) {
 				    
 				    const chunkEntry = this.state.playlistChunks.shift();
 				    try {
-				
 				        let rawData = await this.app.chunkDB.get(chunkEntry.id);
 				        
 				        if (currentGeneration !== this.jumpGeneration) {
@@ -2227,49 +2250,22 @@ getAllChunksData(keys) {
 				        if (!rawData) {
 				            return;
 				        }
-				
-			        let isolatedBuffer = await new Promise((resolve, reject) => {
-			            const msgId = ++this.workerMsgId;
-			            
-			            const handler = (e) => {
-			                if (e.data && e.data.id === msgId) {
-			                    cleanup();
-			                    resolve(e.data.buffer);
-			                }
-			            };
-			            
-			            const timerId = setTimeout(() => {
-			                cleanup();
-			
-			                try {
-			                    resolve(rawData.buffer.slice(0));
-			                } catch (err) {
-			                    resolve(rawData.buffer);
-			                }
-			            }, 500);
-			            
-			            const cleanup = () => {
-			                clearTimeout(timerId);
-			                this.audioWorker.removeEventListener('message', handler);
-			            };
-			            this.audioWorker.addEventListener('message', handler);
-			            
-			            try {
-			                const slicedBuffer = rawData.buffer.slice(0);
-			                this.audioWorker.postMessage({ id: msgId, buffer: slicedBuffer }, [slicedBuffer]);
-			            } catch (err) {
-			                cleanup();
-			                resolve(rawData.buffer);
-			            }
-			        });
-			
-				
-				        rawData = null;
-				        if (currentGeneration !== this.jumpGeneration) {
-				            return;
+				        let bufferToDecode;
+				        if (rawData.byteOffset === 0 && rawData.byteLength === rawData.buffer.byteLength) {
+				            bufferToDecode = rawData.buffer;
+				        } else {
+				            bufferToDecode = rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength);
 				        }
-				        const audioBuffer = await this.audioCtx.decodeAudioData(isolatedBuffer).catch(() => null);
-				        isolatedBuffer = null;
+				        rawData = null;
+
+				        let audioBuffer = null;
+				        try {
+				            audioBuffer = await this.audioCtx.decodeAudioData(bufferToDecode);
+				        } catch (err) {
+				            audioBuffer = null;
+				        }
+				        bufferToDecode = null;
+				
 				        if (currentGeneration !== this.jumpGeneration) {
 				            return;
 				        }
@@ -2279,9 +2275,10 @@ getAllChunksData(keys) {
 				            }
 				            return;
 				        }
-                        if (this.state.currentPlayingChunkData) {
-                            this.state.playedChunksHistory.push(this.state.currentPlayingChunkData);
-                        }
+				
+				        if (this.state.currentPlayingChunkData) {
+				            this.state.playedChunksHistory.push(this.state.currentPlayingChunkData);
+				        }
 				        this.state.currentPlayingChunkData = chunkEntry;
 				        this.state.hasStartedPlayback = true;
 				        
@@ -2290,14 +2287,14 @@ getAllChunksData(keys) {
 				        this.#scheduleChunk(audioBuffer);
 				    } catch (e) {
 				    } finally {
-			            if (currentGeneration === this.jumpGeneration) {
-			                this.state.isDecoding = false;
-			                this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 10);
-			            }
+                        this.state.isDecoding = false;
+                        if (currentGeneration === this.jumpGeneration) {
+                            this.playbackTimeoutId = setTimeout(() => this.#playbackLoop(), 10);
+                        }
 				    }
 				}
-				
-			
+								    
+
 			    #scheduleChunk(buffer) {
 				    const source = this.audioCtx.createBufferSource();
 				    source.buffer = buffer;
@@ -2330,8 +2327,6 @@ getAllChunksData(keys) {
 				    };
 				}
 			
-			   
-			
 			    
 			    async jumpChunks(amount) {
 			        if (this.state.isStopped || this.isJumping) return;
@@ -2345,9 +2340,7 @@ getAllChunksData(keys) {
 			        } else {
 			            preservedOffset = this.currentChunkOffset;
 			        }
-			
-			
-			
+
 			        this.resetScheduledPlayback();
 			        this.currentChunkOffset = preservedOffset;
 			
