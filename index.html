@@ -577,26 +577,25 @@ SOFTWARE.
 			        });
 			    }
 			
-getAllChunksData(keys) {
-    if (!keys || keys.length === 0) return [];
-
-    const results = [];
-
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        const parts = key.split('_');
-
-        if (parts.length >= 4) {
-            results.push({ 
-                id: key, 
-                length: parseInt(parts[2], 10), 
-                startTime: parseInt(parts[1], 10) 
-            });
-        }
-    }
-
-    return results.sort((a, b) => a.startTime - b.startTime);
-}
+				getAllChunksData(keys) {
+				    if (!keys || keys.length === 0) return [];
+				
+				    const results = [];
+				
+				    for (let i = 0; i < keys.length; i++) {
+				        const key = keys[i];
+				        const parts = key.split('_');
+				
+				        if (parts.length >= 4) {
+				            results.push({ 
+				                id: key, 
+				                length: parseInt(parts[2], 10), 
+				                startTime: parseInt(parts[1], 10) 
+				            });
+				        }
+				    }
+				    return results.sort((a, b) => a.startTime - b.startTime);
+				}
 			
 			
 			    getSetting(key) {
@@ -699,7 +698,7 @@ getAllChunksData(keys) {
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
 			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
-			            { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }    
+			            { name: "Ambient Sleeping", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
 			        this.stations = [
