@@ -1,6 +1,6 @@
 <!-- ---------------------------------------------------------------------------
 
-MIT License
+MIT License 101 ok
 
 Copyright (c) 2026 Heinz Ahrens https://github.com/ahrenstk/TimeshiftRadioPlayer
 
@@ -716,7 +716,7 @@ SOFTWARE.
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
 			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
-			            { name: "Ambient Sleeping Pill 3", url: "https://radio.stereoscenic.com/asp-s" }    
+			            { name: "Ambient Sleeping Pill", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
 			        this.stations = [
@@ -804,14 +804,32 @@ SOFTWARE.
 			        this.registerServiceWorker();
 			    }
 			    
-			    getLiveUrl(streamType = "dynamic") {
-			        const stream = this.dynamicUrls[streamType];
-			        if (!stream) return "";
 
-			        const minute = new Date().getMinutes();
-			        const isPrimary = (minute >= 3 && minute < 27) || (minute >= 33 && minute < 57);
-			        return isPrimary ? stream.primary : stream.secondary;
-			    }
+			    
+				getLiveUrl(streamType = "dynamic") {
+				    const stream = this.dynamicUrls[streamType];
+				    if (!stream) return "";
+				
+				    const minute = new Date().getMinutes();
+				    
+				    const switchMinutes = [3, 27, 33, 57];
+				    
+				    let activeIndex = -1;
+				    for (let i = 0; i < switchMinutes.length; i++) {
+				        if (minute >= switchMinutes[i]) {
+				            activeIndex = i;
+				        }
+				    }
+				    
+				    if (activeIndex === -1) {
+				        activeIndex = switchMinutes.length - 1;
+				    }
+				    
+				    const isPrimary = (activeIndex % 2 === 0);
+				
+				    return isPrimary ? stream.primary : stream.secondary;
+				}			    
+			    
 
 			    startWatchdog() {
 			        if (this.state.watchdogIntervalId) clearInterval(this.state.watchdogIntervalId);
@@ -996,14 +1014,13 @@ SOFTWARE.
 				        }
 				    };
 				
-				    this._initSW = async () => {
+                    this._initSW = async () => {
 				        try {
 				            this._swRegistration = await navigator.serviceWorker.register('./sw.js');
 				            this._swRegistration.update().catch(() => {});
 
 				            document.addEventListener('visibilitychange', this._onVisibilityChangeSW);
 				        } catch (err) {
-				            console.warn("Service Worker loaded in offline mode or failed:", err);
 				        }
 				    };
 				
@@ -1030,6 +1047,8 @@ SOFTWARE.
 			        this.state = app.state;
 			        this.els = {};
 			        this.isLiveSwitching = false;
+			        this.targetLiveVolume = 1.0;
+                    this.fadeInterval = null;
 			
 			        this.icons = {
 			            play: `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
@@ -1112,8 +1131,8 @@ SOFTWARE.
 			        
 			        this.els.startBtn.innerHTML = this.icons.play;
 			    }
+		
 			
-			    
 				bindEvents() {
 				    this.els.startBtn.addEventListener('click', () => {
 				        if (this.state.isLiveMode) this.stopLiveMode();
@@ -1142,7 +1161,7 @@ SOFTWARE.
 				    this.els.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
 				    this.els.sleepTimerSlider.addEventListener('input', (e) => this.handleSleepTimerChange(e));
 				    
-				    // Feste Referenzen für globale Listener definieren, damit sie später sauber gelöscht werden können:
+
 				    this._onOnline = () => {
 				        this.app.state.isConnected = true;
 				        this.app.streamer.ensureConnection();
@@ -1168,7 +1187,7 @@ SOFTWARE.
 				        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active-touch'));
 				    };
 				
-				    // Registrierung der globalen Listener unter Verwendung der festen Referenzen:
+
 				    window.addEventListener('online', this._onOnline);
 				    window.addEventListener('offline', this._onOffline);
 				    window.addEventListener('beforeunload', this._onBeforeUnload);
@@ -1177,6 +1196,24 @@ SOFTWARE.
 				    document.addEventListener('touchend', this._onTouchEnd);
 				    document.addEventListener('touchcancel', this._onTouchEnd);
 				
+
+                    this.els.liveAudio.addEventListener('loadedmetadata', () => {
+					    if (!this.isLiveSwitching) return;
+					    
+					    this.els.liveAudio.play()
+					        .then(() => {
+					            this.isLiveSwitching = false;
+					        })
+					        .catch(() => {
+					            this.isLiveSwitching = false;
+					        });
+					});
+					
+				    this.els.liveAudio.addEventListener('error', () => {
+				        if (!this.isLiveSwitching) return;
+				        this.isLiveSwitching = false;
+				    });
+				
 				    this.els.startBtn.closest('.player-card').addEventListener('touchstart', (e) => {
 				        const btn = e.target.closest('.btn');
 				        if (btn && !btn.disabled) {
@@ -1184,6 +1221,8 @@ SOFTWARE.
 				        }
 				    }, { passive: true });
 				}
+							    
+
 							    
 			
 			    #bindSwitch() {
@@ -1308,95 +1347,79 @@ SOFTWARE.
 			        this.update();
 			    }
 
-			    
-			    
 				stopLiveMode() {
 				    if (!this.state.isLiveMode) return; 
 				    this.state.isLiveMode = false;
-				    
 				    this.isLiveSwitching = false;
+
+				    this.#cancelActiveLiveSwitch();
 				    
-				    this.els.liveAudio.pause();
-				    this.els.liveAudio.removeAttribute('src');
-				    this.els.liveAudio.load();
-					this.update();
+				    const audio = this.els.liveAudio;
+				    audio.pause();
+				    audio.src = "";
+				    audio.removeAttribute('src');
+				    try {
+				        audio.load();
+				    } catch(e) {}
+				    
+				    this.update();
 				}
 				
-			    
-				switchLiveStreamTo(url) {
-				    if (!url) return;
+				#cancelActiveLiveSwitch() {
+				    this.isLiveSwitching = false;
+				    const audio = this.els.liveAudio;
+				    
+				    // Eventuelle Altreferenz löschen
+				    if (this.activeLiveSwitch) {
+				        const s = this.activeLiveSwitch;
+				        if (s.safetyTimeout) clearTimeout(s.safetyTimeout);
+				        if (s.fadeInterval) clearInterval(s.fadeInterval);
+				        
+				        if (s.onMetadataLoaded) audio.removeEventListener('loadedmetadata', s.onMetadataLoaded);
+				        if (s.onSwitchError) audio.removeEventListener('error', s.onSwitchError);
+				        
+				        this.activeLiveSwitch = null;
+				    }
+				}
+				
+				
+
+				async switchLiveStreamTo(url) {
+				    if (!url || !this.state.isLiveMode) return;
 				
 				    const absoluteTargetUrl = new URL(url, window.location.href).href;
 				    const absoluteCurrentUrl = this.els.liveAudio.src ? new URL(this.els.liveAudio.src, window.location.href).href : '';
 				
-				    if (this.isLiveSwitching || absoluteTargetUrl === absoluteCurrentUrl) {
-				        return;
-				    }
+				    if (absoluteTargetUrl === absoluteCurrentUrl) return;
 				    this.isLiveSwitching = true;
+				    
 				    const audio = this.els.liveAudio;
 				
-				    const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
+				    audio.pause();
+				    audio.currentTime = 0;
+				    audio.src = "";
+				    audio.removeAttribute('src');
+				    audio.load();
 				
-				    const cleanup = () => {
-				        if (safetyTimeout) clearTimeout(safetyTimeout);
-				        audio.removeEventListener('loadedmetadata', onMetadataLoaded);
-				        audio.removeEventListener('error', onSwitchError);
+				    this.#cancelActiveLiveSwitch();
+				    await new Promise(resolve => setTimeout(resolve, 50));
+				
+                    try {
+				        audio.src = url;
+				        const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
+				        audio.volume = targetVolume;
+				        audio.load();
+				        
+				        await audio.play();
 				        this.isLiveSwitching = false;
-				    };
-				
-				    const onMetadataLoaded = () => {
-				        audio.play()
-				            .then(() => {
-				                fadeVolume(0, targetVolume, 150, () => {
-				                    cleanup();
-				                });
-				            })
-				            .catch(() => {
-				                cleanup();
-				            });
-				    };
-				
-				    const onSwitchError = () => {
-				        cleanup();
-				    };
-				
-				    const safetyTimeout = setTimeout(() => {
-				        cleanup();
-				    }, 5000);
-				
-				    audio.addEventListener('loadedmetadata', onMetadataLoaded);
-				    audio.addEventListener('error', onSwitchError);
-				
-				    const fadeVolume = (from, to, duration, callback) => {
-				        const steps = 15;
-				        const stepTime = duration / steps;
-				        const volumeStep = (to - from) / steps;
-				        let currentStep = 0;
-				
-				        const interval = setInterval(() => {
-				            currentStep++;
-				            const nextVolume = Math.max(0, Math.min(1, from + volumeStep * currentStep));
-				            audio.volume = nextVolume;
-				
-				            if (currentStep >= steps) {
-				                clearInterval(interval);
-				                audio.volume = to;
-				                if (callback) callback();
-				            }
-				        }, stepTime);
-				    };
-				
-				    const currentVol = audio.volume;
-				    fadeVolume(currentVol, 0, 150, () => {
-				        try {
-				            audio.src = url;
-				            audio.load();
-				            audio.play().catch(() => {});
-				        } catch (e) {
-				            cleanup();
-				        }
-				    });
+				    } catch (err) {
+				        this.isLiveSwitching = false;
+				    }
 				}
+				
+
+			
+
 			
 			
 			    update() {
@@ -2106,7 +2129,6 @@ SOFTWARE.
 			        if (!this.audioCtx || this.audioCtx.state === 'closed') {
 			            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 			            if (!AudioContextClass) {
-			                console.error("[Player] Web Audio API wird von diesem Browser nicht unterstützt.");
 			                return;
 			            }
 			            this.audioCtx = new AudioContextClass();
@@ -2118,9 +2140,7 @@ SOFTWARE.
 
 			            this.audioCtx.onstatechange = () => {
 			                if ((this.audioCtx.state === 'suspended' || this.audioCtx.state === 'interrupted') && this.state.isPlaying) {
-			                    this.audioCtx.resume().catch((err) => {
-			                        console.warn("[Player] AudioContext resume fehlgeschlagen:", err);
-			                    });
+			                    this.audioCtx.resume().catch(() => {});
 			                }
 			            };
 			        }
@@ -2128,9 +2148,7 @@ SOFTWARE.
 			        if (this.audioCtx.state === "suspended") {
 			            try {
 			                await this.audioCtx.resume();
-			            } catch (err) {
-			                console.warn("[Player] Autoplay-Blockade beim Aufwecken des AudioContext:", err);
-			            }
+			            } catch (err) {}
 			        }
 			    }
 
@@ -2190,9 +2208,7 @@ SOFTWARE.
 			        if (this.audioCtx.state === "suspended") {
 			            try {
 			                await this.audioCtx.resume();
-			            } catch (err) {
-			                console.warn("[Player] Konnte AudioContext in play() nicht reaktivieren:", err);
-			            }
+			            } catch (err) {}
 			        }
 
 			        const finalGain = this.app.ui.getPerceivedGain(this.app.ui.els.volumeSlider.value / 100);
@@ -2319,9 +2335,8 @@ SOFTWARE.
 			            this.#scheduleChunk(audioBuffer);
 			
 
-			            this.#preloadNeighbors();
+                        this.#preloadNeighbors();
 			        } catch (e) {
-			            console.error("[Player] Unerwarteter Fehler in #playbackLoop:", e);
 			        } finally {
 			            this.state.isDecoding = false;
 			            if (currentGeneration === this.jumpGeneration) {
@@ -2417,6 +2432,7 @@ SOFTWARE.
 			            } catch (e) {}
 			        };
 			    }
+			
 
 			}
 			
