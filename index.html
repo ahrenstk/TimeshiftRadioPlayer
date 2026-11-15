@@ -1,6 +1,6 @@
 <!-- ---------------------------------------------------------------------------
 
-MIT License
+MIT License 101 ok
 
 Copyright (c) 2026 Heinz Ahrens https://github.com/ahrenstk/TimeshiftRadioPlayer
 
@@ -343,6 +343,16 @@ SOFTWARE.
 			.buffer-underrun {
 			    background-color: var(--clr-light);
 			}
+			.slider-input,
+            .timer-input {
+                appearance: none;
+                width: 100%;
+                height: 0.5em;
+                border-radius: 0.35em;
+                outline: none;
+                cursor: pointer;
+                touch-action: pan-x;
+            }
 			.switch-container {
 			    display: flex;
 			    position: relative;
@@ -442,6 +452,9 @@ SOFTWARE.
 			    background-color: var(--bg-input) !important;
 			    border: var(--border-width) solid var(--text-disabled, #b0b0b0) !important;
 			}
+		
+
+			
 		</style>
 		
 	</head>
@@ -698,13 +711,12 @@ SOFTWARE.
 			            { name: "SWR4", url: "https://liveradio.swr.de/sw282p3/swr4fn/play.mp3" }, 
 			            { name: "WDR 3", url: "https://wdr-wdr3-live.icecast.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3" },
 			            { name: "WDR 5", url: "https://wdr-wdr5-live.icecastssl.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3" },   
-			            { name: "MDR Klassik", url: "https://mdr-284350-0.sslcast.mdr.de/mdr/284350/0/mp3/high/stream.mp3"}, 
 			            { name: 'Absolut relax', url: 'https://absolut-relax.live-sm.absolutradio.de/absolut-relax' },
 			            { name: 'Klassik Radio', url: 'https://klassikr.streamabc.net/klr-krdnational-mp3-192-8877033' },
 			            { name: "knixx.fm Analog Sound", url: "https://s1.knixx.fm/dein_webradio_fm_sound_320.mp3" },    
 			            { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http"},
 			            { name: "Ambi Nature Radio", url: "https://nature-rex.radioca.st/stream" },
-			            { name: "Ambient Sleeping Pill 2", url: "https://radio.stereoscenic.com/asp-s" }    
+			            { name: "Ambient Sleeping Pill 3", url: "https://radio.stereoscenic.com/asp-s" }    
 			        ];
 			
 			        this.stations = [
@@ -718,7 +730,6 @@ SOFTWARE.
 					    { name: "SWR4", url: "https://liveradio.swr.de/sw282p3/swr4fn/play.mp3" }, 
 					    { name: "WDR 3", url: "https://wdr-wdr3-live.icecast.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3" },
 					    { name: "WDR 5", url: "https://wdr-wdr5-live.icecastssl.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3" },  
-					    { name: "MDR Klassik", url: "https://mdr-284350-0.sslcast.mdr.de/mdr/284350/0/mp3/high/stream.mp3" },  
 					    { name: 'Absolut relax', url: 'https://absolut-relax.live-sm.absolutradio.de/absolut-relax' },    
 					    { name: 'Klassik Radio', url: 'https://klassikr.streamabc.net/klr-krdnational-mp3-192-8877033' },
 					    { name: "Radio Geschmack", url: "https://s2.genx-stream.de:8702/;?type=http" },
@@ -737,7 +748,6 @@ SOFTWARE.
 			            }
 			        };
 			        
-			        this.dynamicStreamTimeout = null;
 			        this.state = {
 				        bitrate: 160000,
 				        streamUrl: '',
@@ -767,6 +777,23 @@ SOFTWARE.
 			    }
 			
 		
+				checkLiveStreamSwitch() {
+				    if (!this.state.isLiveMode || this.ui.isLiveSwitching) return;
+				
+				    const selected = this.livestations[this.ui.els.liveStationSelect.value];
+				    if (selected?.url && this.dynamicUrls[selected.url]) {
+				        const targetUrl = this.getLiveUrl(selected.url);
+				        const absoluteTargetUrl = new URL(targetUrl, window.location.href).href;
+				        const absoluteCurrentUrl = this.ui.els.liveAudio.src ? new URL(this.ui.els.liveAudio.src, window.location.href).href : '';
+				
+				
+				        if (absoluteTargetUrl !== absoluteCurrentUrl) {
+				            this.ui.switchLiveStreamTo(targetUrl);
+				        }
+				    }
+				}
+		
+		
 			    async init() {
 			        this.ui.collectElements();
 			        await this.chunkDB.init();
@@ -792,6 +819,7 @@ SOFTWARE.
 			        this.state.watchdogIntervalId = setInterval(() => {
 			            this.handleSleepTimer();
 			            this.streamer.ensureConnection();
+			            this.checkLiveStreamSwitch();
 			            this.ui.update();
 			        }, 1000);
 			    }
@@ -809,46 +837,6 @@ SOFTWARE.
 			        }
 			    }
 			    
-			
-				handleDynamicLiveStream(isInitialCall = false) {
-				    if (!this.state.isLiveMode) {
-				        return;
-				    }
-				
-				    const switchMinutes = [3, 27, 33, 57];
-				    const now = new Date();
-				    const currentMinute = now.getMinutes();
-				    let nextSwitchMinute = -1;
-				
-				    for (const minute of switchMinutes) {
-				        if (currentMinute < minute) {
-				            nextSwitchMinute = minute;
-				            break;
-				        }
-				    }
-				    if (nextSwitchMinute === -1) {
-				        nextSwitchMinute = switchMinutes[0];
-				    }
-				
-				    const nextSwitchDate = new Date();
-				    if (nextSwitchMinute <= currentMinute) {
-				        nextSwitchDate.setHours(now.getHours() + 1);
-				    }
-				    nextSwitchDate.setMinutes(nextSwitchMinute, 0, 0);
-				
-				    const delay = nextSwitchDate.getTime() - now.getTime();
-				
-				    this.dynamicStreamTimeout = setTimeout(() => {
-				        if (this.state.isLiveMode && !this.ui.isLiveSwitching) {
-				            const selected = this.livestations[this.ui.els.liveStationSelect.value];
-				            if (selected?.url && this.dynamicUrls[selected.url]) {
-				                this.ui.switchLiveStreamTo(this.getLiveUrl(selected.url));
-				            }
-				        }
-				        this.handleDynamicLiveStream();
-				    }, delay + 50);
-				}
-
 			
 			    async requestWakeLock() {
 			    if ('wakeLock' in navigator) {
@@ -995,35 +983,44 @@ SOFTWARE.
 				
 				    let refreshing = false;
 
-				    navigator.serviceWorker.addEventListener('controllerchange', () => {
+				    this._onControllerChange = () => {
 				        if (!refreshing) {
 				            refreshing = true;
 				            window.location.reload();
 				        }
-				    });
+				    };
 				
-				    const initSW = async () => {
+				    this._onVisibilityChangeSW = () => {
+				        if (document.visibilityState === 'visible' && this._swRegistration) {
+				            this._swRegistration.update().catch(() => {});
+				        }
+				    };
+				
+				    this._initSW = async () => {
 				        try {
-				            const registration = await navigator.serviceWorker.register('./sw.js');
-				
-				            registration.update().catch(() => {});
-				
-				            document.addEventListener('visibilitychange', () => {
-				                if (document.visibilityState === 'visible') {
-				                    registration.update().catch(() => {});
-				                }
-				            });
+				            this._swRegistration = await navigator.serviceWorker.register('./sw.js');
+				            this._swRegistration.update().catch(() => {});
+
+				            document.addEventListener('visibilitychange', this._onVisibilityChangeSW);
 				        } catch (err) {
 				            console.warn("Service Worker loaded in offline mode or failed:", err);
 				        }
 				    };
 				
+				    this._onLoadSW = () => {
+				        this._initSW();
+				    };
+				
+				    navigator.serviceWorker.addEventListener('controllerchange', this._onControllerChange);
+				
 				    if (document.readyState === 'complete') {
-				        initSW();
+				        this._initSW();
 				    } else {
-				        window.addEventListener('load', initSW);
+				        window.addEventListener('load', this._onLoadSW);
 				    }
 				}
+
+
 			}
 			
 			class UIManager {
@@ -1055,7 +1052,33 @@ SOFTWARE.
 			        this.els.switchLabel = this.els.switchContainer.querySelector('.switch-label');
 			    }
 			
-			
+
+				destroy() {
+				    if (this._onOnline) {
+				        // Diese Events liegen direkt auf dem UIManager (this)
+				        window.removeEventListener('online', this._onOnline);
+				        window.removeEventListener('offline', this._onOffline);
+				        window.removeEventListener('beforeunload', this._onBeforeUnload);
+				        document.removeEventListener('visibilitychange', this._onVisibilityChange);
+				        document.removeEventListener('gesturestart', this._onGestureStart);
+				        document.removeEventListener('touchend', this._onTouchEnd);
+				        document.removeEventListener('touchcancel', this._onTouchEnd);
+				
+
+				        if ('serviceWorker' in navigator && this.app._onControllerChange) {
+				            navigator.serviceWorker.removeEventListener('controllerchange', this.app._onControllerChange);
+				        }
+				        if (this.app._onVisibilityChangeSW) {
+				            document.removeEventListener('visibilitychange', this.app._onVisibilityChangeSW);
+				        }
+				        if (this.app._onLoadSW) {
+				            window.removeEventListener('load', this.app._onLoadSW);
+				        }
+				    }
+				}
+				
+					
+
 			    async initStations() {
 			        this.app.stations.forEach((station, index) => {
 			            const option = document.createElement('option');
@@ -1083,89 +1106,85 @@ SOFTWARE.
 			
 					const savedLiveName = await this.app.chunkDB.getSetting("selectedLiveStationName");
 					let targetLiveIndex = this.app.livestations.findIndex(s => s.name === savedLiveName);
-					if (targetLiveIndex === -1) targetLiveIndex = 0; // Fallback auf 1. Sender
+					if (targetLiveIndex === -1) targetLiveIndex = 0;
 					
 					this.els.liveStationSelect.value = targetLiveIndex;
 			        
 			        this.els.startBtn.innerHTML = this.icons.play;
 			    }
+			
 			    
-			    
-			    bindEvents() {
-			        this.els.startBtn.addEventListener('click', () => {
-			            if (this.state.isLiveMode) this.stopLiveMode();
-			            if (this.state.isDecoding) return;
-			            
-			            if (this.state.isStopped) this.app.startRadio();
-			            else if (this.state.isPlaying) this.app.player.pause();
-			            else this.app.player.play();
-			            this.update();
-			        });
-			
-			        this.els.liveBtn.addEventListener('click', () => {
-			            if (!this.state.isLiveMode) this.startLiveMode();
-			            else this.stopLiveMode();
-			        });
-			
-			        this.els.rewindBtn.addEventListener('click', () => this.app.player.jumpChunks(-1));
-			        this.els.rewindBtn2.addEventListener('click', () => this.app.player.jumpChunks(-10));
-			        this.els.skipBtn.addEventListener('click', () => this.app.player.jumpChunks(1));
-			        this.els.skipBtn2.addEventListener('click', () => this.app.player.jumpChunks(10));
-			
-			
-			  
-			        this.#bindSwitch();
-			        this.els.stationSelect.addEventListener('change', (e) => this.handleStationChange(e));
-			        this.els.liveStationSelect.addEventListener('change', (e) => this.handleLiveStationChange(e));
-			
-			
-			        this.els.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
-			        this.els.sleepTimerSlider.addEventListener('input', (e) => this.handleSleepTimerChange(e));
-			        
-			        this.#setupDraggableSlider(this.els.volumeSlider);
-			        this.#setupDraggableSlider(this.els.sleepTimerSlider);
-			
-			
-			        window.addEventListener('online', () => {
-			            this.app.state.isConnected = true;
-			            this.app.streamer.ensureConnection();
-			        });
-			
-			        window.addEventListener('offline', () => {
-			            this.app.state.isConnected = false;
-			            this.app.streamer.disconnect(false);
-			            this.update();
-			        });
-			
-			        window.addEventListener('beforeunload', (e) => {
-			            e.preventDefault();
-			            e.returnValue = true;
-			        });
-			
-			        document.addEventListener('visibilitychange', () => {
-			            if ((this.state.isPlaying || this.state.isLiveMode) && document.visibilityState === 'visible') {
-			                this.app.requestWakeLock();
-			            }
-			        });
-			
-			        document.addEventListener('gesturestart', (e) => {
-			            e.preventDefault();
-			        });
-			
-			        this.els.startBtn.closest('.player-card').addEventListener('touchstart', (e) => {
-			            const btn = e.target.closest('.btn');
-			            if (btn && !btn.disabled) {
-			                btn.classList.add('active-touch');
-			            }
-			        }, { passive: true });
-			
-			        const removeTouchFeedback = () => {
-			            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active-touch'));
-			        };
-			        document.addEventListener('touchend', removeTouchFeedback);
-			        document.addEventListener('touchcancel', removeTouchFeedback);
-			    }
-			    
+				bindEvents() {
+				    this.els.startBtn.addEventListener('click', () => {
+				        if (this.state.isLiveMode) this.stopLiveMode();
+				        if (this.state.isDecoding) return;
+				        
+				        if (this.state.isStopped) this.app.startRadio();
+				        else if (this.state.isPlaying) this.app.player.pause();
+				        else this.app.player.play();
+				        this.update();
+				    });
+				
+				    this.els.liveBtn.addEventListener('click', () => {
+				        if (!this.state.isLiveMode) this.startLiveMode();
+				        else this.stopLiveMode();
+				    });
+				
+				    this.els.rewindBtn.addEventListener('click', () => this.app.player.jumpChunks(-1));
+				    this.els.rewindBtn2.addEventListener('click', () => this.app.player.jumpChunks(-10));
+				    this.els.skipBtn.addEventListener('click', () => this.app.player.jumpChunks(1));
+				    this.els.skipBtn2.addEventListener('click', () => this.app.player.jumpChunks(10));
+				
+				    this.#bindSwitch();
+				    this.els.stationSelect.addEventListener('change', (e) => this.handleStationChange(e));
+				    this.els.liveStationSelect.addEventListener('change', (e) => this.handleLiveStationChange(e));
+				
+				    this.els.volumeSlider.addEventListener('input', (e) => this.handleVolumeChange(e));
+				    this.els.sleepTimerSlider.addEventListener('input', (e) => this.handleSleepTimerChange(e));
+				    
+				    // Feste Referenzen für globale Listener definieren, damit sie später sauber gelöscht werden können:
+				    this._onOnline = () => {
+				        this.app.state.isConnected = true;
+				        this.app.streamer.ensureConnection();
+				    };
+				    this._onOffline = () => {
+				        this.app.state.isConnected = false;
+				        this.app.streamer.disconnect(false);
+				        this.update();
+				    };
+				    this._onBeforeUnload = (e) => {
+				        e.preventDefault();
+				        e.returnValue = true;
+				    };
+				    this._onVisibilityChange = () => {
+				        if ((this.state.isPlaying || this.state.isLiveMode) && document.visibilityState === 'visible') {
+				            this.app.requestWakeLock();
+				        }
+				    };
+				    this._onGestureStart = (e) => {
+				        e.preventDefault();
+				    };
+				    this._onTouchEnd = () => {
+				        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active-touch'));
+				    };
+				
+				    // Registrierung der globalen Listener unter Verwendung der festen Referenzen:
+				    window.addEventListener('online', this._onOnline);
+				    window.addEventListener('offline', this._onOffline);
+				    window.addEventListener('beforeunload', this._onBeforeUnload);
+				    document.addEventListener('visibilitychange', this._onVisibilityChange);
+				    document.addEventListener('gesturestart', this._onGestureStart);
+				    document.addEventListener('touchend', this._onTouchEnd);
+				    document.addEventListener('touchcancel', this._onTouchEnd);
+				
+				    this.els.startBtn.closest('.player-card').addEventListener('touchstart', (e) => {
+				        const btn = e.target.closest('.btn');
+				        if (btn && !btn.disabled) {
+				            btn.classList.add('active-touch');
+				        }
+				    }, { passive: true });
+				}
+							    
 			
 			    #bindSwitch() {
 			        let isDragging = false, startX = 0, currentTranslate = 0;
@@ -1287,7 +1306,6 @@ SOFTWARE.
 			        
 			        this.updateMediaSession(selected.name, "Live Radio Stream");
 			        this.update();
-			        this.app.handleDynamicLiveStream(true);
 			    }
 
 			    
@@ -1301,13 +1319,7 @@ SOFTWARE.
 				    this.els.liveAudio.pause();
 				    this.els.liveAudio.removeAttribute('src');
 				    this.els.liveAudio.load();
-				    
-				    if (this.app.dynamicStreamTimeout) {
-				        clearTimeout(this.app.dynamicStreamTimeout);
-				        this.app.dynamicStreamTimeout = null;
-				    }
-				    
-				    this.update();
+					this.update();
 				}
 				
 			    
@@ -1379,7 +1391,6 @@ SOFTWARE.
 				        try {
 				            audio.src = url;
 				            audio.load();
-				            // Direktes play() signalisiert dem Browser, dass die Wiedergabe fortgesetzt werden soll
 				            audio.play().catch(() => {});
 				        } catch (e) {
 				            cleanup();
@@ -1595,53 +1606,7 @@ SOFTWARE.
 			        return Math.min(1.0, Math.pow(linearVolume, 0.35) * (1.2 - 0.2 * linearVolume));
 			    }
 			    
-			  #setupDraggableSlider(slider) {
-			        const handleDrag = (clientX) => {
-			            const rect = slider.getBoundingClientRect();
-			            const width = rect.width;
-			            let pct = (clientX - rect.left) / width;
-			            pct = Math.max(0, Math.min(1, pct));
-			            
-			            const min = parseFloat(slider.min) || 0;
-			            const max = parseFloat(slider.max) || 100;
-			            const step = parseFloat(slider.step) || 1;
-			            
-			            let value = min + pct * (max - min);
-			            value = Math.round(value / step) * step;
-			            value = Math.max(min, Math.min(max, value));
-			            
-			            if (parseFloat(slider.value) !== value) {
-			                slider.value = value;
-			                slider.dispatchEvent(new Event('input', { bubbles: true }));
-			            }
-			        };
-			
-			        const onStart = (e) => {
-			            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-			            if (clientX === undefined) return;
-			            slider.isDragging = true;
-			            handleDrag(clientX);
-			            if (e.cancelable) e.preventDefault();
-			        };
-			
-			        const onMove = (e) => {
-			            if (!slider.isDragging) return;
-			            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-			            if (clientX === undefined) return;
-			            handleDrag(clientX);
-			            if (e.cancelable) e.preventDefault();
-			        };
-			
-			        const onEnd = () => {
-			            slider.isDragging = false;
-			        };
-			
-			        slider.addEventListener('pointerdown', onStart);
-			        window.addEventListener('pointermove', onMove);
-			        window.addEventListener('pointerup', onEnd);
-			        window.addEventListener('pointercancel', onEnd);
-			        slider.style.touchAction = 'none';
-			    }
+
 			
 			    
 			    
@@ -2093,32 +2058,21 @@ SOFTWARE.
 				    if (!chunkId || !this.audioCtx) return null;
 				    if (this.decodedCache.has(chunkId)) {
 				        const cached = this.decodedCache.get(chunkId);
-				        // LRU aktualisieren
 				        this.decodedCache.delete(chunkId);
 				        this.decodedCache.set(chunkId, cached);
 				        return cached;
 				    }
 				
-
-				    const decodePromise = (async () => {
-				        try {
-				            const rawData = await this.app.chunkDB.get(chunkId);
-				            if (!rawData) return null;
-				
-				            let bufferToDecode;
-				            if (rawData.byteOffset === 0 && rawData.byteLength === rawData.buffer.byteLength) {
-				                bufferToDecode = rawData.buffer;
-				            } else {
-				                bufferToDecode = rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength);
-				            }
-				
-				            return await this.audioCtx.decodeAudioData(bufferToDecode);
-				        } catch (e) {
-				            this.decodedCache.delete(chunkId);
-				            return null;
-				        }
-				    })();
-				
+					const decodePromise = (async () => {
+					    try {
+					        const rawData = await this.app.chunkDB.get(chunkId);
+					        if (!rawData) return null;
+					        return await this.audioCtx.decodeAudioData(rawData.buffer);
+					    } catch (e) {
+					        this.decodedCache.delete(chunkId);
+					        return null;
+					    }
+					})();
 
 				    if (this.decodedCache.size >= this.MAX_DECODED_CACHE) {
 				        const oldestKey = this.decodedCache.keys().next().value;
@@ -2377,9 +2331,6 @@ SOFTWARE.
 			    }
 			
 
-
-
-
 			    resetScheduledPlayback() {
 			        this.jumpGeneration++;
 			        this.virtualPlayTime = 0;
@@ -2466,7 +2417,6 @@ SOFTWARE.
 			            } catch (e) {}
 			        };
 			    }
-			
 
 			}
 			
