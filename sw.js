@@ -64,6 +64,15 @@ self.addEventListener('fetch', event => {
     request.destination === 'document' || 
     request.headers.get('accept')?.includes('text/html')
   ) {
+
+    if (url.pathname.endsWith('legal.html') || url.pathname.endsWith('privacy.html')) {
+      event.respondWith(
+        caches.match(request, { ignoreSearch: true })
+          .then(cached => cached || fetch(request))
+      );
+      return;
+    }
+
     event.respondWith(
       caches.match('./index.html', { ignoreSearch: true })
         .then(cached => cached || caches.match('index.html') || caches.match('./'))
