@@ -13,9 +13,6 @@
 
 
 
-![TimeshiftRadioPlayer](https://raw.githubusercontent.com/ahrenstk/TimeshiftRadioPlayer/main/TimeshiftRadioPlayer.jpg)
-
-
 ---
 
 ## Overview
@@ -114,8 +111,12 @@ Dynamic urls for switching at :03, :27, :33, :57 every hour.
 
 ---
 
-
 ## License
 
 This project is licensed under the **MIT License**. You can find the licensing details in the `LICENSE` file.
+
+---
+
+![TimeshiftRadioPlayer](https://raw.githubusercontent.com/ahrenstk/TimeshiftRadioPlayer/main/TimeshiftRadioPlayer.jpg)
+
 
