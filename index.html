@@ -222,7 +222,7 @@ SOFTWARE.
 			    font-family: inherit;
 			    background: transparent;
 			    padding: 0 1.2em;
-			    border-radius: 99em; hardware-acceleration;
+			    border-radius: 99em;
 			    cursor: pointer;
 			    min-width: 0;
 			    flex-shrink: 0;
@@ -743,8 +743,8 @@ SOFTWARE.
 			        this.chunkDB = new ChunkDB();
 			        
 			        this.livestations = [
-			            { name: "BOB! & Best of Rock", url: "dynamic" }, 
-			            { name: "BOB! & Best of Rock AAC", url: "dynamic_aac" },
+                        { name: "BOB! & Best of Rock", url: "dynamic_one" },
+                        { name: "BOB! & Best of Rock AAC", url: "dynamic_two" },
 			            { name: "RADIO BOB!", url: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de" },
 			            { name: "RADIO BOB! AAC", url: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de" },
 			            { name: "Best of Rock", url: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de" },
@@ -784,11 +784,11 @@ SOFTWARE.
 			        ];
 			
                     this.dynamicUrls = {
-			            dynamic: {
+			            dynamic_one: {
 			                primary: "https://streams.radiobob.de/bob-national/mp3-128/streams.radiobob.de",
 			                secondary: "https://streams.radiobob.de/bob-bestofrock/mp3-128/streams.radiobob.de"
 			            },
-			            dynamic_aac: {
+			            dynamic_two: {
 			                primary: "https://streams.radiobob.de/bob-national/aac-64/streams.radiobob.de",
 			                secondary: "https://streams.radiobob.de/bob-bestofrock/aac-64/mediaplayer"
 			            }
@@ -855,9 +855,8 @@ SOFTWARE.
 			        this.registerServiceWorker();
 			    }
 			    
-
 			    
-				getLiveUrl(streamType = "dynamic") {
+				getLiveUrl(streamType = "dynamic_one") {
 				    const stream = this.dynamicUrls[streamType];
 				    if (!stream) return "";
 				
@@ -1429,8 +1428,7 @@ SOFTWARE.
 				        this.activeLiveSwitch = null;
 				    }
 				}
-				
-				
+
 
 				async switchLiveStreamTo(url) {
 				    if (!url || !this.state.isLiveMode) return;
@@ -1444,32 +1442,40 @@ SOFTWARE.
 				    const audio = this.els.liveAudio;
 				
 				    audio.pause();
-				    audio.currentTime = 0;
-				    audio.src = "";
+				    this.#cancelActiveLiveSwitch();
 				    audio.removeAttribute('src');
 				    audio.load();
 				
-				    this.#cancelActiveLiveSwitch();
-				    await new Promise(resolve => setTimeout(resolve, 50));
+				    await new Promise(resolve => setTimeout(resolve, 250));
 				
-                    try {
-				        audio.src = url;
-				        const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
-				        audio.volume = targetVolume;
-				        audio.load();
-				        
-				        await audio.play();
-				        this.isLiveSwitching = false;
-				    } catch (err) {
-				        this.isLiveSwitching = false;
+				    let attempts = 0;
+				    const maxAttempts = 3;
+				    let success = false;
+				
+				    while (attempts < maxAttempts && !success && this.state.isLiveMode) {
+				        try {
+				            attempts++;
+				            audio.src = url;
+				            const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
+				            audio.volume = targetVolume;
+				            audio.load();
+				            
+				            await audio.play();
+				            success = true;
+				            this.isLiveSwitching = false;
+				        } catch (err) {
+				            if (attempts < maxAttempts && this.state.isLiveMode) {
+				                await new Promise(resolve => setTimeout(resolve, attempts * 500));
+				            } else {
+				                this.isLiveSwitching = false;
+				                this.els.statusDisplay.innerText = "Verbindung hakt... (Reconnect)";
+				            }
+				        }
 				    }
 				}
+
 				
 
-			
-
-			
-			
 			    update() {
 			        this.#updateBufferBars();
 			        this.#updateStatusDisplay();
@@ -2491,20 +2497,17 @@ SOFTWARE.
 			        if (isSeamless) {
 			            const prevGain = this.lastGainNode;
 			            try {
-
 			                prevGain.gain.cancelScheduledValues(startTime);
 			                prevGain.gain.setValueAtTime(1.0, startTime);
-			                prevGain.gain.linearRampToValueAtTime(0.0, startTime + fadeDuration);
+			                prevGain.gain.exponentialRampToValueAtTime(0.001, startTime + fadeDuration);
 			            } catch (e) {}
-			
-
-			            localGain.gain.setValueAtTime(0.0, startTime);
-			            localGain.gain.linearRampToValueAtTime(1.0, startTime + fadeDuration);
+			            localGain.gain.setValueAtTime(0.001, startTime);
+			            localGain.gain.exponentialRampToValueAtTime(1.0, startTime + fadeDuration);
 			        } else {
-
-			            localGain.gain.setValueAtTime(0.0, startTime);
-			            localGain.gain.linearRampToValueAtTime(1.0, startTime + 0.01);
+			            localGain.gain.setValueAtTime(0.001, startTime);
+			            localGain.gain.exponentialRampToValueAtTime(1.0, startTime + 0.01);
 			        }
+			
 			
 			        source.start(startTime, offset);
 			
