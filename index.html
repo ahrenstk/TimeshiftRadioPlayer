@@ -53,7 +53,7 @@ SOFTWARE.
 			    --text-disabled: #b0b0b0;
 			    --text-select-disabled: #c5c5c5;
 			    --clr-cyan: #52c5c5;
-			    --border-width: 0.12em; /* Desktop / Standard */
+			    --border-width: 0.12em;
 			}
 			@media (max-width: 480px), (pointer: coarse) {
 			    :root {
@@ -77,7 +77,7 @@ SOFTWARE.
 			    -webkit-tap-highlight-color: transparent;
 			}
 			.app-footer {
-			    margin-top: 1.5em; /* Luft nach oben zur Karte */
+			    margin-top: 1.5em;
 			    font-size: 0.65rem;
 			    color: var(--text-muted);
 			    text-align: center;
@@ -104,7 +104,7 @@ SOFTWARE.
 			.player-card {
 			    position: relative;
 			    background: var(--bg-card);
-			    padding: 1.5em; /* Zurück zu einfachem, sauberem Allround-Padding */
+			    padding: 1.5em;
 			    width: min(92vw, 62vh);
 			    border-radius: 1.5rem;
 			    max-width: 28rem;
@@ -114,13 +114,13 @@ SOFTWARE.
 			    flex-direction: column;
 			    justify-content: center;
 			    align-items: center;
-			    gap: 1.6em; /* Einheitlich reduziertes Gap */
+			    gap: 1.6em;
 			    overflow: hidden;
 			    flex-shrink: 0;
 			}
 			.header-group {
-		        margin-top: -0.2em; /* Zieht das Statussegment unauffällig etwas höher */
-		        gap: 0.5em !important; /* Hält den Abstand zum Buffer eng */
+		        margin-top: -0.2em;
+		        gap: 0.5em !important;
 		    }
 			.control-group {
 			    display: flex;
@@ -737,7 +737,8 @@ SOFTWARE.
 			        });
 			    }
 			}
-			
+
+
 			class App {
 			    constructor() {
 			        this.chunkDB = new ChunkDB();
@@ -839,7 +840,7 @@ SOFTWARE.
 				
 				
 				        if (absoluteTargetUrl !== absoluteCurrentUrl) {
-				            this.ui.(targetUrl);
+				            this.ui.switchLiveStreamTo(targetUrl);
 				        }
 				    }
 				}
@@ -861,10 +862,9 @@ SOFTWARE.
 				    if (!stream) return "";
 				
 				    const minute = new Date().getMinutes();
-				    
 				    const switchMinutes = [3, 27, 33, 57];
-				    
 				    let activeIndex = -1;
+				    
 				    for (let i = 0; i < switchMinutes.length; i++) {
 				        if (minute >= switchMinutes[i]) {
 				            activeIndex = i;
@@ -874,9 +874,7 @@ SOFTWARE.
 				    if (activeIndex === -1) {
 				        activeIndex = switchMinutes.length - 1;
 				    }
-				    
 				    const isPrimary = (activeIndex % 2 === 0);
-				
 				    return isPrimary ? stream.primary : stream.secondary;
 				}			    
 			    
@@ -1087,9 +1085,9 @@ SOFTWARE.
 				    }
 				}
 
-
 			}
-			
+
+
 			class UIManager {
 			    
 			    constructor(app) {
@@ -1144,8 +1142,7 @@ SOFTWARE.
 				        }
 				    }
 				}
-				
-					
+
 
 			    async initStations() {
 			        this.app.stations.forEach((station, index) => {
@@ -1180,8 +1177,8 @@ SOFTWARE.
 			        
 			        this.els.startBtn.innerHTML = this.icons.play;
 			    }
-		
-			
+
+
 				bindEvents() {
 				    this.els.startBtn.addEventListener('click', () => {
 				        if (this.state.isLiveMode) this.stopLiveMode();
@@ -1244,7 +1241,6 @@ SOFTWARE.
 				    document.addEventListener('gesturestart', this._onGestureStart);
 				    document.addEventListener('touchend', this._onTouchEnd);
 				    document.addEventListener('touchcancel', this._onTouchEnd);
-				
 
                     this.els.liveAudio.addEventListener('loadedmetadata', () => {
 					    if (!this.isLiveSwitching) return;
@@ -1270,10 +1266,9 @@ SOFTWARE.
 				        }
 				    }, { passive: true });
 				}
-							    
+			    
 
-							    
-			
+
 			    #bindSwitch() {
 			        let isDragging = false, startX = 0, currentTranslate = 0;
 			        const switchButton = this.els.switchButton;
@@ -1323,7 +1318,6 @@ SOFTWARE.
 			            }
 			            currentTranslate = 0;
 			        };
-			        
 			
 			        this.els.switchContainer.addEventListener('pointerdown', onPointerDown);
 			        this.els.switchLabel.addEventListener('click', (e) => e.preventDefault());
@@ -1437,18 +1431,17 @@ SOFTWARE.
 				    const absoluteCurrentUrl = this.els.liveAudio.src ? new URL(this.els.liveAudio.src, window.location.href).href : '';
 
 				    if (absoluteTargetUrl === absoluteCurrentUrl) return;
+				    
 				    this.isLiveSwitching = true;
 				    this.stopLiveMode();
 				    
 				    await new Promise(resolve => setTimeout(resolve, 250));
 				    
-				    this.state.isLiveMode = false; // Zurücksetzen für sauberen Start
+				    this.state.isLiveMode = false;
 				    this.startLiveMode();
 				    this.isLiveSwitching = false;
 				}
 
-
-				
 
 			    update() {
 			        this.#updateBufferBars();
@@ -1592,14 +1585,12 @@ SOFTWARE.
 			
 			    #updateButtons() {
 			        const canPlay = this.state.playlistChunks.length >= 1 || this.state.isPlaying || this.state.isManualPause;
-			        
-			
+
 			        const shouldBeDisabled = this.state.isLiveMode ||
 			                                 (!canPlay) ||
 			                                 (!this.state.isPlaying && this.state.isDecoding);
 			
 			        this.els.startBtn.disabled = shouldBeDisabled;
-			
 			        this.els.startBtn.innerHTML = this.state.isPlaying ? this.icons.pause : this.icons.play;
 			        
 			        const canControl = !this.state.isLiveMode && !this.state.isStopped && this.state.isPlaying;
@@ -1633,10 +1624,8 @@ SOFTWARE.
 				        this.els.startBtn.classList.remove('btn-active');
 				    }
 				}
-				
-			
-			    
-			
+
+
 			    #updateSleepTimerSlider() {
 			        if (!this.state.sleepTimerEndTime) {
 			            this.els.sleepTimerSlider.value = 0;
@@ -1649,20 +1638,21 @@ SOFTWARE.
 			        this.els.sleepTimerSlider.value = remainingMinutes;
 			        this.els.sleepTimerSlider.style.background = `linear-gradient(to right, var(--clr-light) ${percentage}%, var(--bg-inactive) ${percentage}%)`;
 			    }
-			
+
+
 			    updateMediaSession(title, artist) {
-			    if ('mediaSession' in navigator) {
-			        try {
-			            navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: 'Radio Player' });
-			            const setHandler = (action, handler) => {
-			                try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) {}
-			            };
-			            setHandler('play', () => this.state.isLiveMode ? this.els.liveAudio.play().catch(()=>{}) : this.app.player.play());
-			            setHandler('pause', () => this.state.isLiveMode ? this.els.liveAudio.pause() : this.app.player.pause());
-			            setHandler('stop', () => this.state.isLiveMode ? this.stopLiveMode() : this.app.toggleNetworkFreeze());
-			        } catch (e) {}
+			        if ('mediaSession' in navigator) {
+			            try {
+			                navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: 'Radio Player' });
+			                const setHandler = (action, handler) => {
+			                    try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) {}
+			                };
+			                setHandler('play', () => this.state.isLiveMode ? this.els.liveAudio.play().catch(()=>{}) : this.app.player.play());
+			                setHandler('pause', () => this.state.isLiveMode ? this.els.liveAudio.pause() : this.app.player.pause());
+			                setHandler('stop', () => this.state.isLiveMode ? this.stopLiveMode() : this.app.toggleNetworkFreeze());
+			            } catch (e) {}
+			        }
 			    }
-			}
 			
 			    getPerceivedGain(linearVolume) {
 			        if (linearVolume <= 0) return 0;
@@ -1670,12 +1660,9 @@ SOFTWARE.
 			        return Math.min(1.0, Math.pow(linearVolume, 0.35) * (1.2 - 0.2 * linearVolume));
 			    }
 			    
-
-			
-			    
-			    
 			}
-			
+
+
 			class StreamManager {
 			    constructor(app) {
 			        this.app = app;
@@ -1685,7 +1672,8 @@ SOFTWARE.
 			        this.controller = null;
 			        this.lastConnectTime = 0;
 			    }
-			    
+
+
 			    async connect() {
 			        if (this.state.isStopped || this.state.isNetworkFrozen || this.state.isConnecting) return;
 			        this.lastConnectTime = Date.now();
@@ -1728,9 +1716,8 @@ SOFTWARE.
 			            this.reader = null;
 			        }
 			    }
-			
-			
-			
+
+
 			    disconnect(forceFlush = false) {
 			        if (forceFlush && this.chunkProcessor) {
 			            this.chunkProcessor.process(new Uint8Array(0), true);
@@ -1746,8 +1733,8 @@ SOFTWARE.
 			        this.state.isConnected = false;
 			        this.state.isConnecting = false;
 			    }
-			    
-			    
+
+
 			    async #readLoop() {
 			        try {
 			            while (!this.state.isStopped && !this.state.isNetworkFrozen && this.reader) {
@@ -1778,7 +1765,6 @@ SOFTWARE.
 				        this.connect();
 				    }
 				}
-			
 			}
 			
 		
@@ -1828,6 +1814,7 @@ SOFTWARE.
 			        }
 			        return signatures;
 			    }
+
 
 				#extractValidChunk(targetMaxBytes) {
 				    let currentPos = 0;
@@ -1905,10 +1892,8 @@ SOFTWARE.
 				    }
 				    return null;
 				}
-				
 
-			
-			
+
 			    #findOverlapOffset(buffer) {
 			        if (!this.lastChunkTailFrames || this.lastChunkTailFrames.length === 0) return -1;
 			
@@ -1931,8 +1916,8 @@ SOFTWARE.
 			        }
 			        return -1;
 			    }
-			
-			
+
+
 			    async #storeChunk(chunkData) {
 			        if (!chunkData || chunkData.length === 0) {
 			            return;
@@ -1961,7 +1946,8 @@ SOFTWARE.
 			        } catch (e) {
 			        }
 			    }
-			
+
+
 				#getFrameInfo(data, pos) {
 				    if (pos + 4 > data.length) return null;
 				    if (data[pos] !== 0xFF || (data[pos + 1] & 0xE0) !== 0xE0) return null;
@@ -2003,17 +1989,14 @@ SOFTWARE.
 				    const size = Math.floor((coefficients * bitrate) / sampleRate) + padding;
 				    return { size, sampleRate, bitrate };
 				}
-				
+
 
 				#getFrameSize(data, pos) {
 				    const info = this.#getFrameInfo(data, pos);
 				    return info ? info.size : -1;
 				}
-				
-						
 
-			
-			
+
 			    #findFirstValidHeaderChain(data, offset, requiredChainLength = 3) {
 			        for (let i = offset; i < data.length - 4; i++) {
 			            if (data[i] === 0xFF && (data[i + 1] & 0xE0) === 0xE0) {
@@ -2035,7 +2018,7 @@ SOFTWARE.
 			        }
 			        return -1;
 			    }
-			
+
 
 				process(newData, forceFlush = false) {
 				    if (newData && newData.length > 0) {
@@ -2130,7 +2113,7 @@ SOFTWARE.
 		
 
 			class Player {
-			    
+
 			    constructor(app) {
 			        this.app = app;
 			        this.state = app.state;
@@ -2143,13 +2126,12 @@ SOFTWARE.
 			        this.isRebuffering = false;
 			        this.currentChunkOffset = 0;
 			        this.jumpGeneration = 0;
-			        
 			        this.decodedCache = new Map();
                     this.MAX_DECODED_CACHE = 3;
-			        
 			        this.lastGainNode = null;
                     this.FADE_TIME = 0.05;
 			    }
+
 
 				async #getOrDecodeChunk(chunkId) {
 				    if (!chunkId || !this.audioCtx) return null;
@@ -2179,7 +2161,7 @@ SOFTWARE.
 				
 				    return decodePromise;
 				}
-				
+
 
 			    #preloadNeighbors() {
 
@@ -2198,7 +2180,7 @@ SOFTWARE.
 			        }
 			    }
 
-			
+
                 async initAudioContext() {
 			        if (!this.audioCtx || this.audioCtx.state === 'closed') {
 			            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -2307,7 +2289,7 @@ SOFTWARE.
 			        }
 			    }			    
 
-			
+
 			    pause(isManualAction = true) {
 				    if (isManualAction) {
 				        this.state.isManualPause = true;
@@ -2322,8 +2304,7 @@ SOFTWARE.
 				        this.state.playlistChunks.unshift(this.state.currentPlayingChunkData);
 				        this.state.currentPlayingChunkData = null;
 				    }
-			
-			
+
 				    this.resetScheduledPlayback();
 				   
 				    if (this.state.wakeLock) { 
@@ -2332,8 +2313,8 @@ SOFTWARE.
 				    }
 				    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
 				}
-			
-			
+
+
 			    async #playbackLoop() {
 			        if (!this.state.isPlaying || this.state.isStopped || !this.audioCtx) {
 			            return;
@@ -2379,9 +2360,7 @@ SOFTWARE.
 			        const chunkEntry = this.state.playlistChunks.shift();
 			
 			        try {
-
 			            const audioBuffer = await this.#getOrDecodeChunk(chunkEntry.id);
-			
 
 			            if (currentGeneration !== this.jumpGeneration) {
 			                return;
@@ -2407,8 +2386,6 @@ SOFTWARE.
 			
 
 			            this.#scheduleChunk(audioBuffer);
-			
-
                         this.#preloadNeighbors();
 			        } catch (e) {
 			        } finally {
