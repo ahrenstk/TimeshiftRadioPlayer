@@ -839,7 +839,7 @@ SOFTWARE.
 				
 				
 				        if (absoluteTargetUrl !== absoluteCurrentUrl) {
-				            this.ui.switchLiveStreamTo(targetUrl);
+				            this.ui.(targetUrl);
 				        }
 				    }
 				}
@@ -1437,17 +1437,13 @@ SOFTWARE.
 				    const absoluteCurrentUrl = this.els.liveAudio.src ? new URL(this.els.liveAudio.src, window.location.href).href : '';
 
 				    if (absoluteTargetUrl === absoluteCurrentUrl) return;
-				    
-				    console.log("Wechsle Stream via simulierte Live-Pause & Play...", url);
 				    this.isLiveSwitching = true;
-				    
 				    this.stopLiveMode();
 				    
 				    await new Promise(resolve => setTimeout(resolve, 250));
 				    
 				    this.state.isLiveMode = false; // Zurücksetzen für sauberen Start
 				    this.startLiveMode();
-				    
 				    this.isLiveSwitching = false;
 				}
 
