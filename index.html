@@ -1432,47 +1432,25 @@ SOFTWARE.
 
 				async switchLiveStreamTo(url) {
 				    if (!url || !this.state.isLiveMode) return;
-				
+
 				    const absoluteTargetUrl = new URL(url, window.location.href).href;
 				    const absoluteCurrentUrl = this.els.liveAudio.src ? new URL(this.els.liveAudio.src, window.location.href).href : '';
-				
+
 				    if (absoluteTargetUrl === absoluteCurrentUrl) return;
+				    
+				    console.log("Wechsle Stream via simulierte Live-Pause & Play...", url);
 				    this.isLiveSwitching = true;
 				    
-				    const audio = this.els.liveAudio;
-				
-				    audio.pause();
-				    this.#cancelActiveLiveSwitch();
-				    audio.removeAttribute('src');
-				    audio.load();
-				
+				    this.stopLiveMode();
+				    
 				    await new Promise(resolve => setTimeout(resolve, 250));
-				
-				    let attempts = 0;
-				    const maxAttempts = 3;
-				    let success = false;
-				
-				    while (attempts < maxAttempts && !success && this.state.isLiveMode) {
-				        try {
-				            attempts++;
-				            audio.src = url;
-				            const targetVolume = this.getPerceivedGain(this.els.volumeSlider.value / 100);
-				            audio.volume = targetVolume;
-				            audio.load();
-				            
-				            await audio.play();
-				            success = true;
-				            this.isLiveSwitching = false;
-				        } catch (err) {
-				            if (attempts < maxAttempts && this.state.isLiveMode) {
-				                await new Promise(resolve => setTimeout(resolve, attempts * 500));
-				            } else {
-				                this.isLiveSwitching = false;
-				                this.els.statusDisplay.innerText = "Verbindung hakt... (Reconnect)";
-				            }
-				        }
-				    }
+				    
+				    this.state.isLiveMode = false; // Zurücksetzen für sauberen Start
+				    this.startLiveMode();
+				    
+				    this.isLiveSwitching = false;
 				}
+
 
 				
 
